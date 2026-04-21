@@ -1,0 +1,1766 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>gh/dash — 多專案管理台</title>
+<style>
+  /* ───── Design tokens ─────
+     A terminal-inspired dev tool. Deep charcoal base, parchment text,
+     amber accent (git-status warning) + moss accent (committed/ok).
+     Serif display + mono body creates contrast without feeling corporate. */
+  :root {
+    --bg:        #0e0f0d;
+    --bg-1:     #15171410;
+    --panel:    #16181580;
+    --panel-2:  #1c1f1c;
+    --line:     #2a2d28;
+    --line-2:   #3a3e38;
+    --ink:      #e9e4d3;
+    --ink-dim:  #9a9687;
+    --ink-dimmer:#6b6a5f;
+    --amber:    #d99a3f;
+    --amber-hi: #f4bf6a;
+    --moss:     #8aa35a;
+    --rust:     #c76a4f;
+    --blue:     #6b94b8;
+    --grid:     rgba(233,228,211,0.035);
+
+    --f-display: "EB Garamond", "Source Serif Pro", "Noto Serif TC", Georgia, serif;
+    --f-mono:    "JetBrains Mono", "IBM Plex Mono", "Menlo", "Noto Sans Mono CJK TC", ui-monospace, monospace;
+    --f-sans:    "Inter Tight", "Noto Sans TC", system-ui, sans-serif;
+  }
+
+  @import url("https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Inter+Tight:wght@400;500;600&display=swap");
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--f-mono);
+    font-size: 13px;
+    line-height: 1.5;
+    /* subtle grid texture */
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 28px 28px;
+    background-position: -1px -1px;
+  }
+
+  button, input, select, textarea { font: inherit; color: inherit; }
+  a { color: var(--amber); text-decoration: none; }
+  a:hover { color: var(--amber-hi); text-decoration: underline; }
+
+  /* ── Header ── */
+  header.topbar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 18px;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #14161340, transparent);
+    position: sticky; top: 0; z-index: 10;
+    backdrop-filter: blur(6px);
+  }
+  .brand {
+    font-family: var(--f-display);
+    font-size: 22px;
+    letter-spacing: 0.5px;
+    font-style: italic;
+  }
+  .brand .slash { color: var(--amber); font-style: normal; }
+  .brand .sub { color: var(--ink-dim); font-family: var(--f-mono); font-size: 11px; font-style: normal; margin-left: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .config {
+    display: flex; gap: 8px; align-items: center;
+  }
+  .config input {
+    background: var(--panel-2); border: 1px solid var(--line); color: var(--ink);
+    padding: 6px 10px; border-radius: 2px; width: 280px; font-size: 12px;
+  }
+  .config input:focus { outline: none; border-color: var(--amber); }
+  .config .lbl { color: var(--ink-dimmer); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .ratelimit { color: var(--ink-dim); font-size: 11px; }
+  .ratelimit b { color: var(--moss); font-weight: 500; }
+  .ratelimit.warn b { color: var(--rust); }
+
+  /* ── Layout ── */
+  main {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    height: calc(100vh - 57px);
+  }
+  aside.repos {
+    border-right: 1px solid var(--line);
+    display: flex; flex-direction: column;
+    min-height: 0;
+  }
+  section.detail {
+    display: flex; flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* ── Repo list ── */
+  .search-wrap {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    display: grid; gap: 8px;
+  }
+  .search-wrap input {
+    background: transparent; border: 1px solid var(--line-2); color: var(--ink);
+    padding: 8px 10px; border-radius: 2px; font-size: 12px;
+  }
+  .search-wrap input::placeholder { color: var(--ink-dimmer); }
+  .search-wrap input:focus { outline: none; border-color: var(--amber); }
+  .search-wrap .row { display: flex; gap: 8px; align-items: center; justify-content: space-between; font-size: 11px; color: var(--ink-dim); }
+  .search-wrap button {
+    background: transparent; border: 1px solid var(--line-2); color: var(--ink-dim);
+    padding: 4px 8px; border-radius: 2px; cursor: pointer; font-size: 11px;
+  }
+  .search-wrap button:hover { color: var(--ink); border-color: var(--ink-dim); }
+
+  .repo-list { flex: 1; overflow-y: auto; padding: 6px 0; }
+  .repo-list::-webkit-scrollbar { width: 8px; }
+  .repo-list::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 4px; }
+
+  .repo-row {
+    padding: 10px 14px;
+    border-left: 2px solid transparent;
+    cursor: pointer;
+    display: grid; gap: 3px;
+  }
+  .repo-row:hover { background: var(--panel); }
+  .repo-row.active {
+    background: linear-gradient(90deg, #d99a3f15, transparent 80%);
+    border-left-color: var(--amber);
+  }
+  .repo-row .name { color: var(--ink); font-weight: 500; font-size: 13px; }
+  .repo-row .name mark { background: #d99a3f40; color: var(--amber-hi); padding: 0 2px; border-radius: 2px; }
+  .repo-row .meta { color: var(--ink-dimmer); font-size: 10.5px; display: flex; gap: 10px; }
+  .repo-row .meta .priv { color: var(--rust); }
+  .repo-row .meta .pub  { color: var(--moss); }
+
+  .empty { padding: 30px; color: var(--ink-dimmer); text-align: center; font-style: italic; font-family: var(--f-display); }
+
+  /* ── Detail pane ── */
+  .detail-head {
+    padding: 18px 26px;
+    border-bottom: 1px solid var(--line);
+    display: grid; gap: 6px;
+  }
+  .detail-head h1 {
+    margin: 0;
+    font-family: var(--f-display);
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  .detail-head h1 .owner { color: var(--ink-dimmer); font-style: italic; }
+  .detail-head .desc { color: var(--ink-dim); font-size: 12px; max-width: 720px; }
+  .detail-head .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+  .chip {
+    font-size: 10.5px; padding: 2px 8px; border: 1px solid var(--line-2); border-radius: 999px;
+    color: var(--ink-dim); letter-spacing: 0.04em;
+  }
+  .chip.pages { color: var(--moss); border-color: #8aa35a50; }
+  .chip.priv  { color: var(--rust); border-color: #c76a4f50; }
+  .chip.branch{ color: var(--amber); border-color: #d99a3f50; }
+
+  .detail-body { flex: 1; overflow-y: auto; padding: 22px 26px 60px; }
+  .detail-body::-webkit-scrollbar { width: 10px; }
+  .detail-body::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 5px; }
+
+  .blockhead {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin: 28px 0 10px;
+  }
+  .blockhead:first-child { margin-top: 0; }
+  .blockhead h2 {
+    font-family: var(--f-display);
+    font-weight: 400;
+    font-size: 18px; margin: 0;
+    letter-spacing: 0.02em;
+  }
+  .blockhead h2::before {
+    content: "§ ";
+    color: var(--amber);
+    font-weight: 600;
+  }
+  .blockhead .hint { color: var(--ink-dimmer); font-size: 11px; }
+
+  /* ── Drop zone ── */
+  .drop {
+    border: 1.5px dashed var(--line-2);
+    border-radius: 4px;
+    padding: 26px;
+    text-align: center;
+    transition: border-color .15s, background .15s;
+    cursor: pointer;
+  }
+  .drop:hover, .drop.hover {
+    border-color: var(--amber);
+    background: #d99a3f08;
+  }
+  .drop .big { font-family: var(--f-display); font-size: 22px; font-style: italic; color: var(--ink); }
+  .drop .small { color: var(--ink-dim); font-size: 11.5px; margin-top: 4px; }
+  .drop input { display: none; }
+
+  /* ── Queue ── */
+  .queue { margin-top: 14px; display: grid; gap: 8px; }
+  .qitem {
+    display: grid;
+    grid-template-columns: 18px 1fr auto auto;
+    gap: 12px;
+    align-items: center;
+    padding: 9px 12px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+  }
+  .qitem .icon { color: var(--ink-dim); }
+  .qitem.ok .icon { color: var(--moss); }
+  .qitem.err .icon { color: var(--rust); }
+  .qitem.doing .icon { color: var(--amber); animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0.3; } }
+
+  .qitem .path-input {
+    background: transparent; border: none; color: var(--ink);
+    font-family: var(--f-mono); font-size: 12px; width: 100%;
+  }
+  .qitem .path-input:focus { outline: 1px solid var(--amber); outline-offset: 2px; }
+  .qitem .size { color: var(--ink-dimmer); font-size: 11px; white-space: nowrap; }
+  .qitem .rm {
+    background: none; border: none; color: var(--ink-dimmer); cursor: pointer; font-size: 14px; padding: 2px 6px;
+  }
+  .qitem .rm:hover { color: var(--rust); }
+  .qitem .status-msg { grid-column: 2 / -1; font-size: 10.5px; color: var(--ink-dim); margin-top: 2px; }
+  .qitem.err .status-msg { color: var(--rust); }
+  .qitem.ok  .status-msg { color: var(--moss); }
+
+  .queue-actions {
+    display: flex; gap: 10px; align-items: center; margin-top: 12px;
+  }
+  .commit-msg {
+    flex: 1;
+    background: var(--panel-2); border: 1px solid var(--line); color: var(--ink);
+    padding: 8px 10px; border-radius: 2px; font-size: 12px;
+  }
+  .commit-msg:focus { outline: none; border-color: var(--amber); }
+
+  button.primary {
+    background: var(--amber); color: #1a1611; border: none;
+    padding: 9px 16px; border-radius: 2px; cursor: pointer;
+    font-weight: 600; font-size: 12px; letter-spacing: 0.04em;
+    font-family: var(--f-mono);
+  }
+  button.primary:hover { background: var(--amber-hi); }
+  button.primary:disabled { background: var(--line-2); color: var(--ink-dimmer); cursor: not-allowed; }
+
+  button.ghost {
+    background: transparent; border: 1px solid var(--line-2); color: var(--ink-dim);
+    padding: 8px 14px; border-radius: 2px; cursor: pointer; font-size: 12px;
+  }
+  button.ghost:hover { color: var(--ink); border-color: var(--ink-dim); }
+
+  /* ── Commits ── */
+  .commits { display: grid; gap: 0; border-top: 1px solid var(--line); }
+  .commit {
+    display: grid;
+    grid-template-columns: 90px 1fr auto;
+    gap: 14px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--line);
+    align-items: baseline;
+  }
+  .commit .sha {
+    font-family: var(--f-mono); color: var(--amber);
+    font-size: 11.5px; letter-spacing: 0.02em;
+  }
+  .commit .msg {
+    color: var(--ink);
+    font-size: 12.5px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .commit .msg .author { color: var(--ink-dimmer); font-style: italic; margin-right: 8px; }
+  .commit .when { color: var(--ink-dimmer); font-size: 11px; white-space: nowrap; }
+  .commits-loading, .commits-empty {
+    padding: 14px; color: var(--ink-dimmer); font-style: italic; font-family: var(--f-display);
+  }
+
+  /* ── Placeholder (nothing selected) ── */
+  .placeholder {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    color: var(--ink-dimmer);
+    font-family: var(--f-display); font-style: italic; font-size: 22px;
+    padding: 40px; text-align: center;
+  }
+  .placeholder::before {
+    content: "◄";
+    display: block; margin-bottom: 14px; color: var(--line-2); font-size: 40px; font-style: normal;
+  }
+
+  /* ── Toast ── */
+  .toasts { position: fixed; bottom: 18px; right: 18px; display: grid; gap: 8px; z-index: 50; max-width: 420px; }
+  .toast {
+    background: var(--panel-2);
+    border: 1px solid var(--line-2);
+    border-left: 3px solid var(--amber);
+    padding: 10px 14px;
+    font-size: 12px;
+    border-radius: 2px;
+    animation: slideIn .2s ease-out;
+  }
+  .toast.ok  { border-left-color: var(--moss); }
+  .toast.err { border-left-color: var(--rust); }
+  @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } }
+
+  /* ── First-run modal ── */
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(10,10,8,0.8);
+    display: flex; align-items: center; justify-content: center; z-index: 100;
+    backdrop-filter: blur(4px);
+  }
+  .modal {
+    background: var(--panel-2); border: 1px solid var(--line-2); border-radius: 4px;
+    padding: 28px 30px; width: 520px; max-width: 90vw;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+  }
+  .modal h2 { font-family: var(--f-display); font-size: 24px; font-weight: 400; margin: 0 0 4px; }
+  .modal p  { color: var(--ink-dim); font-size: 12px; margin: 0 0 18px; line-height: 1.6; }
+  .modal label { display: grid; gap: 4px; margin-bottom: 12px; font-size: 11px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.08em; }
+  .modal label input {
+    background: var(--bg); border: 1px solid var(--line-2); color: var(--ink);
+    padding: 8px 10px; border-radius: 2px; font-size: 13px; font-family: var(--f-mono);
+  }
+  .modal label input:focus { outline: none; border-color: var(--amber); }
+  .modal .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+
+  /* ── Summary block ── */
+  .summary {
+    margin: 0 0 18px;
+    padding: 14px 16px;
+    background: #0000002a;
+    border-left: 2px solid var(--moss);
+    border-radius: 0 3px 3px 0;
+    display: grid;
+    gap: 8px;
+  }
+  .summary-desc {
+    color: var(--ink);
+    font-family: var(--f-display);
+    font-size: 16px;
+    font-style: italic;
+    line-height: 1.5;
+  }
+  .summary-readme {
+    color: var(--ink-dim);
+    font-size: 12px;
+    line-height: 1.55;
+    padding-top: 4px;
+    border-top: 1px dashed var(--line);
+  }
+  .summary-readme .summary-lbl {
+    display: inline-block;
+    color: var(--ink-dimmer);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    margin-right: 8px;
+    vertical-align: baseline;
+  }
+  .summary-tags {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding-top: 4px;
+  }
+  .summary .tag {
+    font-size: 10.5px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+    border: 1px solid transparent;
+  }
+  .summary .tag.tech { background: #d99a3f15; color: var(--amber-hi); border-color: #d99a3f40; }
+  .summary .tag.lang { background: #6b94b815; color: var(--blue); border-color: #6b94b840; }
+  .summary-loading, .summary-empty {
+    padding: 10px 4px;
+    color: var(--ink-dimmer);
+    font-style: italic;
+    font-family: var(--f-display);
+    font-size: 14px;
+  }
+
+  /* ── Sort & multi-select controls ── */
+  .sort-row {
+    display: flex; gap: 8px; align-items: center; font-size: 11px; color: var(--ink-dim);
+  }
+  .sort-row select {
+    background: var(--panel-2); border: 1px solid var(--line-2); color: var(--ink);
+    padding: 3px 6px; border-radius: 2px; font-size: 11px; font-family: var(--f-mono);
+  }
+  .sort-row select:focus { outline: none; border-color: var(--amber); }
+  .sort-row .multi-toggle {
+    background: transparent; border: 1px solid var(--line-2); color: var(--ink-dim);
+    padding: 3px 8px; border-radius: 2px; cursor: pointer; font-size: 11px;
+  }
+  .sort-row .multi-toggle.on { color: var(--amber); border-color: var(--amber); }
+
+  /* ── Repo row with checkbox (multi mode) ── */
+  .repo-row { position: relative; }
+  .repo-row .cbx {
+    display: none;
+    position: absolute; left: 14px; top: 12px;
+    width: 14px; height: 14px;
+    border: 1.5px solid var(--line-2); border-radius: 2px;
+    background: var(--bg);
+    cursor: pointer;
+  }
+  .repo-row .cbx::after {
+    content: ""; display: block;
+    width: 6px; height: 9px;
+    margin: 0px 3px;
+    border: solid var(--amber); border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0);
+    transition: transform .1s;
+  }
+  .repo-row.checked .cbx::after { transform: rotate(45deg) scale(1); }
+  body.multi .repo-row .cbx { display: block; }
+  body.multi .repo-row .name,
+  body.multi .repo-row .meta { padding-left: 24px; }
+  body.multi .repo-row.active {
+    background: transparent; border-left-color: transparent;
+  }
+  body.multi .repo-row.checked {
+    background: linear-gradient(90deg, #d99a3f20, transparent 80%);
+    border-left-color: var(--amber);
+  }
+
+  /* ── Multi-repo toolbar ── */
+  .multi-bar {
+    padding: 16px 26px;
+    background: linear-gradient(180deg, #d99a3f12, transparent);
+    border-bottom: 1px solid var(--amber);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .multi-bar .count {
+    font-family: var(--f-display);
+    font-size: 22px; font-style: italic;
+  }
+  .multi-bar .count b { color: var(--amber); font-style: normal; font-weight: 600; }
+  .multi-bar .count .sep { color: var(--ink-dimmer); margin: 0 6px; }
+  .multi-bar .targets {
+    flex: 1;
+    color: var(--ink-dim); font-size: 11px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .multi-bar .targets b { color: var(--ink); font-weight: 500; }
+
+  /* ── File tree ── */
+  .tree {
+    font-size: 12px;
+    max-height: 420px;
+    overflow-y: auto;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 6px 0;
+    background: #00000020;
+  }
+  .tree::-webkit-scrollbar { width: 8px; }
+  .tree::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 4px; }
+  .tree-node {
+    padding: 3px 10px 3px 0;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 4px;
+    white-space: nowrap;
+    color: var(--ink);
+  }
+  .tree-node:hover { background: var(--panel); }
+  .tree-node .twig { color: var(--ink-dimmer); width: 14px; flex-shrink: 0; text-align: center; }
+  .tree-node .ic { color: var(--ink-dim); width: 16px; flex-shrink: 0; text-align: center; }
+  .tree-node.dir   .ic { color: var(--amber); }
+  .tree-node.file  .ic { color: var(--blue); }
+  .tree-node .n { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+  .tree-node .sz { color: var(--ink-dimmer); font-size: 10.5px; margin-left: 8px; }
+  .tree-empty { padding: 20px; text-align: center; color: var(--ink-dimmer); font-style: italic; font-family: var(--f-display); }
+
+  /* ── File viewer modal ── */
+  .viewer-bg {
+    position: fixed; inset: 0; background: rgba(10,10,8,0.82);
+    display: flex; align-items: center; justify-content: center; z-index: 90;
+    backdrop-filter: blur(4px);
+    padding: 30px;
+  }
+  .viewer {
+    background: var(--panel-2); border: 1px solid var(--line-2); border-radius: 4px;
+    width: 100%; max-width: 1100px; height: 100%; max-height: 80vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+    overflow: hidden;
+  }
+  .viewer-head {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .viewer-head .path {
+    flex: 1;
+    font-family: var(--f-mono); font-size: 13px; color: var(--ink);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .viewer-head .path .dir { color: var(--ink-dim); }
+  .viewer-head .meta { color: var(--ink-dimmer); font-size: 11px; }
+  .viewer-body {
+    flex: 1; overflow: auto;
+    padding: 0;
+    background: #0a0b09;
+  }
+  .viewer-body pre {
+    margin: 0; padding: 16px 20px;
+    font-family: var(--f-mono); font-size: 12px;
+    color: var(--ink);
+    white-space: pre;
+    min-height: 100%;
+  }
+  .viewer-body .lines {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0;
+  }
+  .viewer-body .ln-no {
+    padding: 0 12px 0 16px;
+    color: var(--ink-dimmer);
+    text-align: right;
+    user-select: none;
+    border-right: 1px solid var(--line);
+    font-size: 11.5px;
+  }
+  .viewer-body .ln-tx {
+    padding: 0 20px 0 12px;
+    color: var(--ink);
+    font-size: 12px;
+    white-space: pre;
+  }
+  .viewer-body.image-mode { display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .viewer-body img { max-width: 100%; max-height: 100%; }
+  .viewer-body .binary {
+    padding: 40px; text-align: center; color: var(--ink-dim);
+    font-family: var(--f-display); font-style: italic; font-size: 18px;
+  }
+  .viewer-body .loading, .viewer-body .err {
+    padding: 40px; text-align: center; color: var(--ink-dim);
+    font-family: var(--f-display); font-style: italic;
+  }
+  .viewer-body .err { color: var(--rust); }
+
+  /* ── responsive-ish ── */
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; height: auto; }
+    aside.repos { border-right: none; border-bottom: 1px solid var(--line); max-height: 50vh; }
+  }
+</style>
+
+<!-- PWA Meta — auto-injected by PWA 打包神器 -->
+<meta name="application-name" content="github管理">
+<meta name="description" content="github管理">
+<meta name="theme-color" content="#1a73e8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="github管理">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<script>if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').then(function(r){console.log('[SW] registered:',r.scope)}).catch(function(e){console.warn('[SW] failed:',e)});});}</script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">gh<span class="slash">/</span>dash<span class="sub">multi-repo commander</span></div>
+  <div class="config">
+    <span class="lbl">worker</span>
+    <input id="workerUrl" placeholder="https://github-manager.xxx.workers.dev" />
+    <button class="ghost" id="reconfigBtn" title="重新設定 Worker / 金鑰 / Owner">⚙</button>
+  </div>
+  <div class="ratelimit" id="ratelimit">rate: <b>—</b>/—</div>
+</header>
+
+<main>
+  <aside class="repos">
+    <div class="search-wrap">
+      <input id="search" placeholder="搜尋 repo… (例：App, tarot, ziwei)" autocomplete="off" />
+      <div class="row">
+        <span id="repoCount">0 repos</span>
+        <button id="refreshRepos">⟳ 重新整理</button>
+      </div>
+      <div class="sort-row">
+        <span>排序</span>
+        <select id="sortBy">
+          <option value="name">名稱 A→Z</option>
+          <option value="pushed">最近推送 ↓</option>
+          <option value="created">建立時間 ↓</option>
+          <option value="stars">星數 ↓</option>
+        </select>
+        <button class="multi-toggle" id="multiToggle" title="切換多選模式">☐ 多選</button>
+      </div>
+    </div>
+    <div class="repo-list" id="repoList">
+      <div class="empty">尚未載入</div>
+    </div>
+  </aside>
+
+  <section class="detail" id="detail">
+    <div class="placeholder">從左側選擇一個專案</div>
+  </section>
+</main>
+
+<div class="toasts" id="toasts"></div>
+
+<!-- First-run / reconfigure modal -->
+<div class="modal-bg" id="configModal" style="display:none">
+  <div class="modal">
+    <h2>設定</h2>
+    <p>這些設定會存在本機 <code>localStorage</code>，不會送到 GitHub。Worker URL 指向你部署的 <code>github-manager</code>，金鑰對應 <code>DASH_SECRET</code>（若有設）。</p>
+    <label>
+      WORKER URL
+      <input id="cfgWorker" placeholder="https://github-manager.xxx.workers.dev" />
+    </label>
+    <label>
+      OWNER (GitHub 帳號)
+      <input id="cfgOwner" placeholder="kftseng2oo1" />
+    </label>
+    <label>
+      DASH SECRET (選填，對應 Worker 的 X-Dash-Key)
+      <input id="cfgSecret" type="password" placeholder="留空代表 Worker 沒設 DASH_SECRET" />
+    </label>
+    <div class="actions">
+      <button class="ghost" id="cfgCancel">取消</button>
+      <button class="primary" id="cfgSave">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- File viewer modal -->
+<div class="viewer-bg" id="viewerModal" style="display:none">
+  <div class="viewer">
+    <div class="viewer-head">
+      <div class="path" id="viewerPath">—</div>
+      <div class="meta" id="viewerMeta"></div>
+      <a id="viewerDownload" class="ghost" style="padding:4px 10px; border:1px solid var(--line-2); border-radius:2px; color:var(--ink-dim); font-size:11px;" download>↓ 下載</a>
+      <button class="ghost" id="viewerClose">關閉</button>
+    </div>
+    <div class="viewer-body" id="viewerBody">
+      <div class="loading">載入中…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   gh/dash — single-file dashboard
+   State:  cfg (localStorage), repos[], current (repo obj), queue[]
+   Flow:   load repos → pick one → load commits + show drop zone → queue files → commit
+   ========================================================================= */
+
+const LS_KEY = "gh-dash-cfg-v1";
+const LS_SORT = "gh-dash-sort-v1";
+const LS_REPO_NAMES = "gh-dash-known-repos-v1";
+const LS_SUMMARY_PREFIX = "gh-dash-summary-v1:"; // + full_name
+
+const state = {
+  cfg: loadCfg(),
+  repos: [],
+  filter: "",
+  sortBy: localStorage.getItem(LS_SORT) || "name",
+  current: null,      // selected repo full object
+  queue: [],          // [{ id, file, path, status, msg, sha }]
+  multi: false,       // multi-repo mode
+  checked: new Set(), // repo full_names checked in multi mode
+  tree: null,         // { repoName, items: [{path, type, size, sha}] }
+  treeLoading: false,
+};
+
+// ── Config ──────────────────────────────────────────────────────────────
+function loadCfg() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch { return null; }
+}
+function saveCfg(cfg) {
+  localStorage.setItem(LS_KEY, JSON.stringify(cfg));
+  state.cfg = cfg;
+  document.getElementById("workerUrl").value = cfg.worker;
+}
+
+function openConfigModal(initial=false) {
+  const m = document.getElementById("configModal");
+  document.getElementById("cfgWorker").value = state.cfg?.worker || "";
+  document.getElementById("cfgOwner").value  = state.cfg?.owner  || "kftseng2oo1";
+  document.getElementById("cfgSecret").value = state.cfg?.secret || "";
+  m.style.display = "flex";
+  m.dataset.initial = initial ? "1" : "0";
+}
+function closeConfigModal() { document.getElementById("configModal").style.display = "none"; }
+
+document.getElementById("reconfigBtn").onclick = () => openConfigModal(false);
+document.getElementById("cfgCancel").onclick = () => {
+  if (document.getElementById("configModal").dataset.initial === "1" && !state.cfg) {
+    toast("err", "需要先完成設定才能使用");
+    return;
+  }
+  closeConfigModal();
+};
+document.getElementById("cfgSave").onclick = () => {
+  const worker = document.getElementById("cfgWorker").value.trim().replace(/\/$/, "");
+  const owner  = document.getElementById("cfgOwner").value.trim();
+  const secret = document.getElementById("cfgSecret").value;
+  if (!worker || !owner) { toast("err", "Worker URL 和 Owner 必填"); return; }
+  saveCfg({ worker, owner, secret });
+  closeConfigModal();
+  loadRepos();
+};
+
+// ── API ─────────────────────────────────────────────────────────────────
+async function gh(path, opts = {}) {
+  if (!state.cfg) throw new Error("未設定");
+  const url = state.cfg.worker + path;
+  const headers = { ...(opts.headers || {}) };
+  if (state.cfg.secret) headers["X-Dash-Key"] = state.cfg.secret;
+  if (opts.body && !headers["Content-Type"]) headers["Content-Type"] = "application/json";
+
+  const res = await fetch(url, { ...opts, headers });
+
+  // Surface rate limit.
+  const rem = res.headers.get("X-RateLimit-Remaining");
+  const lim = res.headers.get("X-RateLimit-Limit");
+  if (rem && lim) updateRateLimit(rem, lim);
+
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = { raw: text }; }
+
+  if (!res.ok) {
+    const msg = data?.message || data?.error || `HTTP ${res.status}`;
+    const err = new Error(msg);
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
+}
+
+function updateRateLimit(rem, lim) {
+  const el = document.getElementById("ratelimit");
+  el.innerHTML = `rate: <b>${rem}</b>/${lim}`;
+  el.classList.toggle("warn", Number(rem) < 100);
+}
+
+// ── Repo list ───────────────────────────────────────────────────────────
+async function loadRepos() {
+  const list = document.getElementById("repoList");
+  list.innerHTML = `<div class="empty">載入中…</div>`;
+  try {
+    // /user/repos gives us private + public in one shot (up to 100 per page).
+    // Paginate defensively for >100 repos.
+    const all = [];
+    for (let page = 1; page <= 5; page++) {
+      const batch = await gh(`/user/repos?per_page=100&page=${page}&sort=updated&affiliation=owner`);
+      if (!Array.isArray(batch) || batch.length === 0) break;
+      all.push(...batch);
+      if (batch.length < 100) break;
+    }
+    state.repos = all;
+    renderRepoList();
+    checkRepoDiff(all);
+  } catch (e) {
+    list.innerHTML = `<div class="empty">載入失敗：${escapeHtml(e.message)}</div>`;
+    toast("err", `載入 repo 失敗：${e.message}`);
+  }
+}
+
+function checkRepoDiff(repos) {
+  const currentNames = repos.map(r => r.full_name).sort();
+  let prev = null;
+  try {
+    const raw = localStorage.getItem(LS_REPO_NAMES);
+    if (raw) prev = JSON.parse(raw);
+  } catch {}
+
+  if (prev && Array.isArray(prev)) {
+    const prevSet = new Set(prev);
+    const curSet  = new Set(currentNames);
+    const added   = currentNames.filter(n => !prevSet.has(n));
+    const removed = prev.filter(n => !curSet.has(n));
+
+    if (added.length) {
+      const names = added.map(n => n.split("/")[1]).slice(0, 3).join(", ");
+      const more = added.length > 3 ? `…等 ${added.length} 個` : "";
+      toast("ok", `偵測到新增 repo：${names}${more}`);
+    }
+    if (removed.length) {
+      const names = removed.map(n => n.split("/")[1]).slice(0, 3).join(", ");
+      const more = removed.length > 3 ? `…等 ${removed.length} 個` : "";
+      toast("err", `已刪除 repo：${names}${more}`);
+    }
+  }
+  localStorage.setItem(LS_REPO_NAMES, JSON.stringify(currentNames));
+}
+
+function sortRepos(arr) {
+  const a = [...arr];
+  switch (state.sortBy) {
+    case "pushed":  a.sort((x, y) => new Date(y.pushed_at || 0) - new Date(x.pushed_at || 0)); break;
+    case "created": a.sort((x, y) => new Date(y.created_at || 0) - new Date(x.created_at || 0)); break;
+    case "stars":   a.sort((x, y) => (y.stargazers_count || 0) - (x.stargazers_count || 0) || x.name.localeCompare(y.name)); break;
+    case "name":
+    default:        a.sort((x, y) => x.name.localeCompare(y.name)); break;
+  }
+  return a;
+}
+
+function renderRepoList() {
+  const q = state.filter.trim().toLowerCase();
+  const matched = q
+    ? state.repos.filter(r => r.name.toLowerCase().includes(q) || (r.description || "").toLowerCase().includes(q))
+    : state.repos;
+  const filtered = sortRepos(matched);
+
+  const list = document.getElementById("repoList");
+  document.getElementById("repoCount").textContent = `${filtered.length} / ${state.repos.length} repos`;
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty">沒有符合的專案</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(r => {
+    const highlighted = q ? hilite(r.name, q) : escapeHtml(r.name);
+    const privacy = r.private ? '<span class="priv">● private</span>' : '<span class="pub">● public</span>';
+    // Meta line changes depending on sort mode so the sort key is visible.
+    let metaExtra;
+    if (state.sortBy === "pushed")       metaExtra = r.pushed_at  ? `推送 ${relTime(r.pushed_at)}`   : "—";
+    else if (state.sortBy === "created") metaExtra = r.created_at ? `建立 ${relTime(r.created_at)}`  : "—";
+    else if (state.sortBy === "stars")   metaExtra = `★ ${r.stargazers_count || 0}`;
+    else                                  metaExtra = r.pushed_at ? relTime(r.pushed_at) : "—";
+
+    const active  = (!state.multi && state.current?.full_name === r.full_name) ? " active"  : "";
+    const checked = (state.multi  && state.checked.has(r.full_name))           ? " checked" : "";
+    return `
+      <div class="repo-row${active}${checked}" data-name="${escapeAttr(r.name)}" data-fullname="${escapeAttr(r.full_name)}">
+        <div class="cbx"></div>
+        <div class="name">${highlighted}</div>
+        <div class="meta">${privacy}<span>${metaExtra}</span>${r.has_pages ? "<span>📄 pages</span>" : ""}</div>
+      </div>
+    `;
+  }).join("");
+
+  list.querySelectorAll(".repo-row").forEach(el => {
+    el.onclick = (e) => {
+      if (state.multi) {
+        toggleChecked(el.dataset.fullname);
+      } else {
+        selectRepo(el.dataset.name);
+      }
+    };
+  });
+}
+
+function toggleChecked(fullName) {
+  if (state.checked.has(fullName)) state.checked.delete(fullName);
+  else state.checked.add(fullName);
+  renderRepoList();
+  renderMultiBar();
+}
+
+function hilite(name, q) {
+  const i = name.toLowerCase().indexOf(q);
+  if (i < 0) return escapeHtml(name);
+  return escapeHtml(name.slice(0, i)) + "<mark>" + escapeHtml(name.slice(i, i + q.length)) + "</mark>" + escapeHtml(name.slice(i + q.length));
+}
+
+document.getElementById("search").oninput = (e) => {
+  state.filter = e.target.value;
+  renderRepoList();
+};
+document.getElementById("refreshRepos").onclick = loadRepos;
+
+// ── Repo detail ─────────────────────────────────────────────────────────
+async function selectRepo(name) {
+  const repo = state.repos.find(r => r.name === name);
+  if (!repo) return;
+  state.current = repo;
+  state.queue = [];
+  renderRepoList();
+  renderDetail();
+  loadCommits();
+}
+
+function renderDetail() {
+  const detailEl = document.getElementById("detail");
+
+  // Multi-repo mode takes over the right pane entirely.
+  if (state.multi) {
+    renderMultiView();
+    return;
+  }
+
+  const r = state.current;
+  if (!r) {
+    detailEl.innerHTML = `<div class="placeholder">從左側選擇一個專案</div>`;
+    return;
+  }
+  const pagesUrl = r.has_pages ? `https://${state.cfg.owner}.github.io/${r.name}/` : null;
+  detailEl.innerHTML = `
+    <div class="detail-head">
+      <h1><span class="owner">${escapeHtml(state.cfg.owner)} /</span> ${escapeHtml(r.name)}</h1>
+      <div class="chips">
+        <span class="chip branch">⎇ ${escapeHtml(r.default_branch || "main")}</span>
+        <span class="chip ${r.private ? "priv" : ""}">${r.private ? "🔒 private" : "🌐 public"}</span>
+        ${r.has_pages ? `<span class="chip pages">📄 <a href="${pagesUrl}" target="_blank" rel="noopener">pages</a></span>` : ""}
+        <a class="chip" href="${r.html_url}" target="_blank" rel="noopener">↗ GitHub</a>
+      </div>
+    </div>
+    <div class="detail-body">
+
+      <div class="summary" id="summaryBox">
+        <div class="summary-loading">正在分析專案…</div>
+      </div>
+
+      <div class="blockhead">
+        <h2>檔案樹</h2>
+        <div class="hint" id="treeHint">點資料夾展開，點檔案檢視內容</div>
+      </div>
+      <div class="tree" id="tree">
+        <div class="tree-empty">載入中…</div>
+      </div>
+
+      <div class="blockhead">
+        <h2>上傳 / 更新檔案</h2>
+        <div class="hint">拖入或點擊；路徑可在佇列中編輯</div>
+      </div>
+      <label class="drop" id="drop">
+        <input type="file" id="fileInput" multiple />
+        <div class="big">拖入檔案</div>
+        <div class="small">或點擊選擇 — 支援多檔、自動偵測 SHA、&lt;25MB/檔</div>
+      </label>
+
+      <div class="queue" id="queue"></div>
+      <div class="queue-actions" id="queueActions" style="display:none">
+        <input class="commit-msg" id="commitMsg" placeholder="commit 訊息（留空則自動生成）" />
+        <button class="ghost" id="clearQueue">清空</button>
+        <button class="primary" id="commitAll">全部提交</button>
+      </div>
+
+      <div class="blockhead" style="margin-top:36px">
+        <h2>最近 commit</h2>
+        <div class="hint" id="commitsHint">載入中…</div>
+      </div>
+      <div class="commits" id="commits"></div>
+
+    </div>
+  `;
+
+  wireDropzone();
+  document.getElementById("clearQueue").onclick = () => { state.queue = []; renderQueue(); };
+  document.getElementById("commitAll").onclick = commitAll;
+  loadTree();
+  loadSummary();
+}
+
+// ── Multi-repo mode ─────────────────────────────────────────────────────
+function renderMultiView() {
+  const checkedRepos = [...state.checked];
+  document.getElementById("detail").innerHTML = `
+    <div class="multi-bar">
+      <div class="count"><b>${checkedRepos.length}</b><span class="sep">/</span>${state.repos.length} repos</div>
+      <div class="targets" id="multiTargets">${
+        checkedRepos.length === 0
+          ? "<em>從左側勾選目標 repo</em>"
+          : checkedRepos.map(n => `<b>${escapeHtml(n.split("/")[1])}</b>`).join(" · ")
+      }</div>
+    </div>
+    <div class="detail-body">
+      <div class="blockhead">
+        <h2>一鍵部署</h2>
+        <div class="hint">同一批檔 → 推到所有勾選的 repo（路徑保持原狀）</div>
+      </div>
+      <label class="drop" id="drop">
+        <input type="file" id="fileInput" multiple />
+        <div class="big">拖入要部署的檔案</div>
+        <div class="small">每個檔會推到每個勾選的 repo 的預設分支；SHA 自動處理</div>
+      </label>
+      <div class="queue" id="queue"></div>
+      <div class="queue-actions" id="queueActions" style="display:none">
+        <input class="commit-msg" id="commitMsg" placeholder="commit 訊息（留空則自動生成）" />
+        <button class="ghost" id="clearQueue">清空</button>
+        <button class="primary" id="commitAll">推到 ${checkedRepos.length} repo</button>
+      </div>
+    </div>
+  `;
+  wireDropzone();
+  document.getElementById("clearQueue").onclick = () => { state.queue = []; renderQueue(); };
+  document.getElementById("commitAll").onclick = commitMulti;
+}
+
+function renderMultiBar() {
+  // Only updates the targets text/count, not the full view.
+  if (!state.multi) return;
+  const bar = document.querySelector(".multi-bar");
+  if (!bar) { renderMultiView(); return; }
+  const checkedRepos = [...state.checked];
+  bar.querySelector(".count").innerHTML = `<b>${checkedRepos.length}</b><span class="sep">/</span>${state.repos.length} repos`;
+  bar.querySelector(".targets").innerHTML = checkedRepos.length === 0
+    ? "<em>從左側勾選目標 repo</em>"
+    : checkedRepos.map(n => `<b>${escapeHtml(n.split("/")[1])}</b>`).join(" · ");
+  // Also update commit button label
+  const btn = document.getElementById("commitAll");
+  if (btn) btn.textContent = `推到 ${checkedRepos.length} repo`;
+}
+
+// ── Commits ─────────────────────────────────────────────────────────────
+async function loadCommits() {
+  const box = document.getElementById("commits");
+  const hint = document.getElementById("commitsHint");
+  if (!box) return;
+  box.innerHTML = `<div class="commits-loading">正在讀取…</div>`;
+  try {
+    const commits = await gh(`/repos/${state.cfg.owner}/${state.current.name}/commits?per_page=15`);
+    if (!Array.isArray(commits) || commits.length === 0) {
+      box.innerHTML = `<div class="commits-empty">無 commit 紀錄</div>`;
+      hint.textContent = "";
+      return;
+    }
+    hint.textContent = `顯示最近 ${commits.length} 筆`;
+    box.innerHTML = commits.map(c => {
+      const sha = (c.sha || "").slice(0, 7);
+      const author = c.commit?.author?.name || c.author?.login || "—";
+      const date = c.commit?.author?.date;
+      const msg = (c.commit?.message || "").split("\n")[0];
+      return `
+        <div class="commit">
+          <a class="sha" href="${c.html_url}" target="_blank" rel="noopener">${escapeHtml(sha)}</a>
+          <div class="msg"><span class="author">${escapeHtml(author)}</span>${escapeHtml(msg)}</div>
+          <div class="when" title="${escapeAttr(date || "")}">${date ? relTime(date) : ""}</div>
+        </div>
+      `;
+    }).join("");
+  } catch (e) {
+    box.innerHTML = `<div class="commits-empty">讀取失敗：${escapeHtml(e.message)}</div>`;
+  }
+}
+
+// ── Summary (description → README → heuristics) ─────────────────────────
+async function loadSummary() {
+  const box = document.getElementById("summaryBox");
+  if (!box) return;
+  const r = state.current;
+  const cacheKey = LS_SUMMARY_PREFIX + r.full_name;
+
+  // Cache busts when repo pushed_at changes — so edits to README/files refresh summary next visit.
+  const cached = readSummaryCache(cacheKey, r.pushed_at);
+  if (cached) { renderSummary(cached); return; }
+
+  const result = { sources: [], description: null, readme: null, tech: [], languages: null };
+
+  // 1. GitHub description (already in memory — no API call needed).
+  if (r.description && r.description.trim()) {
+    result.description = r.description.trim();
+    result.sources.push("description");
+  }
+
+  // 2. Languages — cheap call, gives a lot of signal.
+  try {
+    const langs = await gh(`/repos/${state.cfg.owner}/${r.name}/languages`);
+    if (langs && Object.keys(langs).length) {
+      result.languages = langs;
+      result.sources.push("languages");
+    }
+  } catch { /* non-fatal */ }
+
+  // 3. README first few lines.
+  try {
+    const readme = await gh(`/repos/${state.cfg.owner}/${r.name}/readme`);
+    if (readme?.content) {
+      const b64 = readme.content.replace(/\s/g, "");
+      const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      const text  = new TextDecoder("utf-8").decode(bytes);
+      const excerpt = extractReadmeExcerpt(text);
+      if (excerpt) {
+        result.readme = excerpt;
+        result.sources.push("readme");
+      }
+    }
+  } catch (e) {
+    if (e.status !== 404) { /* still non-fatal, just skip */ }
+  }
+
+  // 4. Heuristics from file tree (if already loaded).
+  // loadTree() runs in parallel so it may or may not be ready; re-check later if needed.
+  const tech = detectTechFromTree();
+  if (tech.length) { result.tech = tech; result.sources.push("tech"); }
+
+  renderSummary(result);
+  writeSummaryCache(cacheKey, r.pushed_at, result);
+
+  // If the tree wasn't ready yet, re-run tech detection once it arrives.
+  // Poll briefly rather than wiring a full event system — it's a one-shot wait.
+  if (!result.tech.length) {
+    let tries = 0;
+    const pollId = setInterval(() => {
+      tries++;
+      if (state.tree?.repoName === r.name) {
+        const t = detectTechFromTree();
+        if (t.length) {
+          result.tech = t;
+          if (!result.sources.includes("tech")) result.sources.push("tech");
+          renderSummary(result);
+          writeSummaryCache(cacheKey, r.pushed_at, result);
+        }
+        clearInterval(pollId);
+      } else if (tries > 20) {
+        clearInterval(pollId);
+      }
+    }, 300);
+  }
+}
+
+function readSummaryCache(key, pushedAt) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (obj.pushedAt !== pushedAt) return null; // stale
+    return obj.data;
+  } catch { return null; }
+}
+function writeSummaryCache(key, pushedAt, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify({ pushedAt, data, cachedAt: Date.now() }));
+  } catch { /* quota — ignore */ }
+}
+
+function extractReadmeExcerpt(text) {
+  // Strip HTML comments, front-matter, badge lines, then grab first meaningful prose paragraph.
+  let t = text.replace(/<!--[\s\S]*?-->/g, "");
+  t = t.replace(/^---[\s\S]*?^---\s*/m, ""); // YAML front-matter
+  const lines = t.split(/\r?\n/);
+  const pieces = [];
+  for (const raw of lines) {
+    const ln = raw.trim();
+    if (!ln) { if (pieces.length) break; continue; }
+    // Skip common noise
+    if (/^#{1,6}\s/.test(ln)) continue;                  // headings
+    if (/^!\[.*?\]\(/.test(ln)) continue;                // image/badge-only lines
+    if (/^\[!\[.*?\]\(.*?\)\]/.test(ln)) continue;       // linked badges
+    if (/^\|.*\|$/.test(ln)) continue;                   // table rows
+    if (/^[-*_]{3,}$/.test(ln)) continue;                // hr
+    if (/^(>|```)/.test(ln)) continue;                   // quote / code fence
+    pieces.push(ln);
+    if (pieces.join(" ").length > 260) break;
+  }
+  if (!pieces.length) return null;
+  // Strip simple markdown syntax.
+  let out = pieces.join(" ")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, "")
+    .trim();
+  if (out.length > 260) out = out.slice(0, 260).replace(/\s+\S*$/, "") + "…";
+  return out;
+}
+
+function detectTechFromTree() {
+  if (!state.tree || state.tree.repoName !== state.current?.name) return [];
+  const paths = state.tree.items.filter(x => x.type === "blob").map(x => x.path);
+  const has = (p) => paths.some(x => x === p || x.endsWith("/" + p));
+  const hasAny = (pred) => paths.some(pred);
+
+  const tags = [];
+
+  // PWA signal
+  if (has("manifest.json") || has("manifest.webmanifest")) {
+    if (has("sw.js") || hasAny(p => /service-?worker/i.test(p))) tags.push("PWA");
+    else tags.push("Web app (manifest)");
+  } else if (hasAny(p => /service-?worker/i.test(p) || p === "sw.js")) {
+    tags.push("Service Worker");
+  }
+
+  // Frameworks
+  if (has("package.json")) {
+    tags.push("Node");
+    if (hasAny(p => /(^|\/)vite\.config\.(js|ts)$/.test(p))) tags.push("Vite");
+    if (hasAny(p => /(^|\/)next\.config\.(js|mjs|ts)$/.test(p))) tags.push("Next.js");
+    if (hasAny(p => /(^|\/)nuxt\.config\.(js|ts)$/.test(p))) tags.push("Nuxt");
+    if (hasAny(p => /\.(jsx|tsx)$/.test(p))) tags.push("React/TSX");
+    if (hasAny(p => /\.vue$/.test(p))) tags.push("Vue");
+    if (hasAny(p => /\.svelte$/.test(p))) tags.push("Svelte");
+  }
+  if (has("requirements.txt") || has("pyproject.toml") || has("setup.py")) tags.push("Python");
+  if (has("Cargo.toml")) tags.push("Rust");
+  if (has("go.mod")) tags.push("Go");
+
+  // Plain single-file HTML app (your common pattern)
+  const htmls = paths.filter(p => /^[^/]+\.html$/.test(p));
+  if (!has("package.json") && !tags.includes("PWA") && htmls.length > 0) {
+    tags.push(htmls.length === 1 ? "單檔 HTML" : `HTML × ${htmls.length}`);
+  }
+
+  // GitHub Pages workflow hint
+  if (hasAny(p => /^\.github\/workflows\//.test(p))) tags.push("GH Actions");
+
+  // Worker / serverless signal
+  if (has("wrangler.toml") || has("wrangler.jsonc")) tags.push("Cloudflare Worker");
+
+  // Docs-only — only if nothing else was detected.
+  if (!tags.length && paths.length <= 3 && paths.includes("README.md")) tags.push("僅 README");
+
+  return tags;
+}
+
+function renderSummary(data) {
+  const box = document.getElementById("summaryBox");
+  if (!box) return;
+
+  // Nothing at all
+  if (!data.description && !data.readme && !data.tech.length && !data.languages) {
+    box.innerHTML = `<div class="summary-empty">尚無摘要可用 — 建議在 GitHub 設定 About 欄位或新增 README.md</div>`;
+    return;
+  }
+
+  const parts = [];
+
+  if (data.description) {
+    parts.push(`<div class="summary-desc">${escapeHtml(data.description)}</div>`);
+  }
+  if (data.readme && data.readme !== data.description) {
+    parts.push(`<div class="summary-readme"><span class="summary-lbl">README</span>${escapeHtml(data.readme)}</div>`);
+  }
+  if (data.tech.length || data.languages) {
+    const langTags = data.languages
+      ? topLanguages(data.languages).map(l => `<span class="tag lang">${escapeHtml(l)}</span>`).join("")
+      : "";
+    const techTags = data.tech.map(t => `<span class="tag tech">${escapeHtml(t)}</span>`).join("");
+    parts.push(`<div class="summary-tags">${techTags}${langTags}</div>`);
+  }
+
+  box.innerHTML = parts.join("");
+}
+
+function topLanguages(langMap) {
+  // Return the top 3 languages by bytes, dropping trivial traces (<5% of total).
+  const entries = Object.entries(langMap);
+  const total = entries.reduce((s, [, v]) => s + v, 0);
+  return entries
+    .filter(([, v]) => v / total >= 0.05)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([k]) => k);
+}
+
+// ── File tree ───────────────────────────────────────────────────────────
+async function loadTree() {
+  const box = document.getElementById("tree");
+  if (!box) return;
+  const repoName = state.current.name;
+  box.innerHTML = `<div class="tree-empty">讀取中…</div>`;
+  try {
+    // Get default branch's commit SHA, then fetch the tree recursively.
+    // One git/trees call returns every path in the repo (up to 100k entries / 7MB).
+    const branch = state.current.default_branch || "main";
+    const ref = await gh(`/repos/${state.cfg.owner}/${repoName}/branches/${encodeURIComponent(branch)}`);
+    const treeSha = ref?.commit?.commit?.tree?.sha;
+    if (!treeSha) throw new Error("找不到 tree SHA");
+
+    const treeRes = await gh(`/repos/${state.cfg.owner}/${repoName}/git/trees/${treeSha}?recursive=1`);
+    const items = (treeRes.tree || []).filter(x => x.type === "blob" || x.type === "tree");
+    state.tree = {
+      repoName,
+      items,
+      truncated: !!treeRes.truncated,
+      expanded: new Set([""]), // root always expanded
+    };
+    renderTree();
+    if (treeRes.truncated) {
+      document.getElementById("treeHint").textContent = "⚠ tree 超過上限，部分項目未列出";
+    } else {
+      document.getElementById("treeHint").textContent = `${items.length} 個項目`;
+    }
+  } catch (e) {
+    box.innerHTML = `<div class="tree-empty">載入失敗：${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function renderTree() {
+  const box = document.getElementById("tree");
+  if (!box || !state.tree) return;
+  const { items, expanded } = state.tree;
+
+  // Build set of directories we should render (ancestors of expanded dirs).
+  // Then walk: show root children, and for each expanded dir, show its children.
+  const lines = [];
+  // Group by parent path for quick lookup.
+  const byParent = new Map(); // parent -> [{name, path, type, size}]
+  for (const it of items) {
+    const parent = it.path.includes("/") ? it.path.slice(0, it.path.lastIndexOf("/")) : "";
+    const name = it.path.slice(parent.length ? parent.length + 1 : 0);
+    if (!byParent.has(parent)) byParent.set(parent, []);
+    byParent.get(parent).push({ name, path: it.path, type: it.type, size: it.size, sha: it.sha });
+  }
+  // Sort each bucket: dirs first, then alpha.
+  for (const arr of byParent.values()) {
+    arr.sort((a, b) => {
+      if (a.type !== b.type) return a.type === "tree" ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+  }
+
+  function walk(parent, depth) {
+    const kids = byParent.get(parent) || [];
+    for (const k of kids) {
+      const indent = "│ ".repeat(Math.max(0, depth - 1)) + (depth > 0 ? "├ " : "");
+      const isDir = k.type === "tree";
+      const isOpen = isDir && expanded.has(k.path);
+      const twig = isDir ? (isOpen ? "▾" : "▸") : "·";
+      const icon = isDir ? (isOpen ? "▤" : "▥") : fileIcon(k.name);
+      const sz = isDir ? "" : fmtSize(k.size || 0);
+      lines.push(`
+        <div class="tree-node ${isDir ? "dir" : "file"}" data-path="${escapeAttr(k.path)}" data-type="${k.type}" data-sha="${escapeAttr(k.sha)}" style="padding-left:${10 + depth * 16}px">
+          <span class="twig">${twig}</span>
+          <span class="ic">${icon}</span>
+          <span class="n">${escapeHtml(k.name)}</span>
+          <span class="sz">${sz}</span>
+        </div>
+      `);
+      if (isDir && isOpen) walk(k.path, depth + 1);
+    }
+  }
+  walk("", 0);
+
+  box.innerHTML = lines.length ? lines.join("") : `<div class="tree-empty">（空 repo）</div>`;
+  box.querySelectorAll(".tree-node").forEach(el => {
+    el.onclick = () => {
+      const path = el.dataset.path;
+      const type = el.dataset.type;
+      if (type === "tree") {
+        if (expanded.has(path)) expanded.delete(path);
+        else expanded.add(path);
+        renderTree();
+      } else {
+        openViewer(path, Number(items.find(x => x.path === path)?.size || 0));
+      }
+    };
+  });
+}
+
+function fileIcon(name) {
+  const ext = name.split(".").pop().toLowerCase();
+  if (["html","htm"].includes(ext)) return "◇";
+  if (["js","mjs","jsx","ts","tsx"].includes(ext)) return "⟨⟩";
+  if (["css","scss"].includes(ext)) return "~";
+  if (["json","yml","yaml","toml"].includes(ext)) return "≡";
+  if (["md","txt"].includes(ext)) return "¶";
+  if (["png","jpg","jpeg","gif","webp","svg","ico"].includes(ext)) return "◉";
+  if (["zip","tar","gz","rar"].includes(ext)) return "▣";
+  return "·";
+}
+
+// ── File viewer ─────────────────────────────────────────────────────────
+const TEXT_EXT = new Set([
+  "txt","md","html","htm","css","scss","js","mjs","jsx","ts","tsx","json","yml","yaml","toml",
+  "xml","svg","csv","tsv","ini","conf","sh","py","rb","go","rs","c","cpp","h","hpp","java",
+  "gitignore","env","log","sql","graphql",
+]);
+const IMAGE_EXT = new Set(["png","jpg","jpeg","gif","webp","ico","bmp"]);
+const VIEW_TEXT_CAP = 500 * 1024; // 500 KB
+
+async function openViewer(path, size) {
+  document.getElementById("viewerModal").style.display = "flex";
+  document.getElementById("viewerPath").innerHTML =
+    path.includes("/")
+      ? `<span class="dir">${escapeHtml(path.slice(0, path.lastIndexOf("/") + 1))}</span>${escapeHtml(path.slice(path.lastIndexOf("/") + 1))}`
+      : escapeHtml(path);
+  document.getElementById("viewerMeta").textContent = fmtSize(size);
+  const body = document.getElementById("viewerBody");
+  body.className = "viewer-body";
+  body.innerHTML = `<div class="loading">讀取中…</div>`;
+
+  const ext = path.split(".").pop().toLowerCase();
+  const repoName = state.current.name;
+
+  // Configure download link — Contents API returns download_url too, but we'll
+  // construct a raw.githubusercontent link that works with public repos.
+  // For private repos we fall back to the GitHub web UI link.
+  const dlEl = document.getElementById("viewerDownload");
+  dlEl.onclick = (e) => { e.preventDefault(); downloadFile(path); };
+  dlEl.href = "#";
+
+  try {
+    const data = await gh(`/repos/${state.cfg.owner}/${repoName}/contents/${encodePath(path)}`);
+    if (Array.isArray(data)) { body.innerHTML = `<div class="err">路徑指向目錄</div>`; return; }
+
+    if (IMAGE_EXT.has(ext) && data.content) {
+      const dataUri = `data:image/${ext === "jpg" ? "jpeg" : ext};base64,${data.content.replace(/\s/g, "")}`;
+      body.className = "viewer-body image-mode";
+      body.innerHTML = `<img alt="${escapeAttr(path)}" src="${dataUri}" />`;
+      return;
+    }
+
+    if (!TEXT_EXT.has(ext)) {
+      body.innerHTML = `<div class="binary">不支援直接檢視的二進位檔案<br><span style="font-size:12px; color:var(--ink-dimmer)">（大小 ${fmtSize(size)}，可按下載）</span></div>`;
+      return;
+    }
+
+    if (size > VIEW_TEXT_CAP) {
+      body.innerHTML = `<div class="binary">檔案過大（${fmtSize(size)}）<br><span style="font-size:12px; color:var(--ink-dimmer)">為避免卡頓不直接顯示，可按下載</span></div>`;
+      return;
+    }
+
+    // Decode base64 → text. atob returns latin1; we need UTF-8, so rebuild via Uint8Array.
+    const b64 = (data.content || "").replace(/\s/g, "");
+    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const text = new TextDecoder("utf-8").decode(bytes);
+    const linesHtml = text.split("\n").map((ln, i) =>
+      `<span class="ln-no">${i + 1}</span><span class="ln-tx">${escapeHtml(ln) || " "}</span>`
+    ).join("");
+    body.innerHTML = `<div class="lines">${linesHtml}</div>`;
+  } catch (e) {
+    body.innerHTML = `<div class="err">讀取失敗：${escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function downloadFile(path) {
+  try {
+    const data = await gh(`/repos/${state.cfg.owner}/${state.current.name}/contents/${encodePath(path)}`);
+    if (!data.content) { toast("err", "此檔無法下載"); return; }
+    const b64 = data.content.replace(/\s/g, "");
+    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const blob = new Blob([bytes]);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = path.split("/").pop();
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (e) {
+    toast("err", `下載失敗：${e.message}`);
+  }
+}
+
+function closeViewer() { document.getElementById("viewerModal").style.display = "none"; }
+document.getElementById("viewerClose").onclick = closeViewer;
+document.getElementById("viewerModal").addEventListener("click", (e) => {
+  if (e.target.id === "viewerModal") closeViewer();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeViewer();
+});
+
+// ── Drop zone & queue ───────────────────────────────────────────────────
+function wireDropzone() {
+  const drop = document.getElementById("drop");
+  const input = document.getElementById("fileInput");
+  input.onchange = (e) => { enqueueFiles(e.target.files); input.value = ""; };
+
+  ["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, (e) => {
+    e.preventDefault(); e.stopPropagation(); drop.classList.add("hover");
+  }));
+  ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, (e) => {
+    e.preventDefault(); e.stopPropagation(); drop.classList.remove("hover");
+  }));
+  drop.addEventListener("drop", (e) => {
+    const files = e.dataTransfer?.files;
+    if (files?.length) enqueueFiles(files);
+  });
+}
+
+function enqueueFiles(fileList) {
+  const SIZE_CAP = 25 * 1024 * 1024;
+  for (const f of fileList) {
+    if (f.size > SIZE_CAP) {
+      toast("err", `${f.name} 超過 25MB，GitHub Contents API 無法處理`);
+      continue;
+    }
+    // webkitRelativePath preserves folder structure when supported,
+    // otherwise default path is just the filename.
+    const path = (f.webkitRelativePath && f.webkitRelativePath.length ? f.webkitRelativePath : f.name);
+    state.queue.push({
+      id: Math.random().toString(36).slice(2, 9),
+      file: f,
+      path,
+      status: "pending", // pending | doing | ok | err
+      msg: "",
+    });
+  }
+  renderQueue();
+}
+
+function renderQueue() {
+  const q = document.getElementById("queue");
+  const actions = document.getElementById("queueActions");
+  if (!q) return;
+  if (state.queue.length === 0) {
+    q.innerHTML = "";
+    actions.style.display = "none";
+    return;
+  }
+  actions.style.display = "flex";
+  q.innerHTML = state.queue.map(item => {
+    const icon = { pending: "·", doing: "▸", ok: "✓", err: "✗" }[item.status];
+    const statusLine = item.msg ? `<div class="status-msg">${escapeHtml(item.msg)}</div>` : "";
+    return `
+      <div class="qitem ${item.status}" data-id="${item.id}">
+        <div class="icon">${icon}</div>
+        <input class="path-input" value="${escapeAttr(item.path)}" ${item.status === "doing" || item.status === "ok" ? "disabled" : ""} />
+        <div class="size">${fmtSize(item.file.size)}</div>
+        <button class="rm" title="移除">×</button>
+        ${statusLine}
+      </div>
+    `;
+  }).join("");
+
+  q.querySelectorAll(".qitem").forEach(el => {
+    const id = el.dataset.id;
+    const item = state.queue.find(x => x.id === id);
+    if (!item) return;
+    const pathInput = el.querySelector(".path-input");
+    pathInput.oninput = (e) => { item.path = e.target.value; };
+    el.querySelector(".rm").onclick = () => {
+      state.queue = state.queue.filter(x => x.id !== id);
+      renderQueue();
+    };
+  });
+}
+
+// ── Commit flow ─────────────────────────────────────────────────────────
+async function commitAll() {
+  if (state.queue.length === 0) return;
+  const btn = document.getElementById("commitAll");
+  btn.disabled = true;
+  const tmpl = document.getElementById("commitMsg").value.trim();
+
+  let okCount = 0, errCount = 0;
+  // Sequential, not parallel — GitHub Contents API is last-write-wins on SHA,
+  // and concurrent PUTs to the same branch can 409.
+  for (const item of state.queue) {
+    if (item.status === "ok") continue;
+    item.status = "doing"; item.msg = "讀取中…"; renderQueue();
+    try {
+      const base64 = await fileToBase64(item.file);
+      item.msg = "查詢既有 SHA…"; renderQueue();
+      const existing = await tryGetContent(item.path);
+      const commitMsg = tmpl || `${existing ? "Update" : "Add"} ${item.path} via dash`;
+      item.msg = existing ? "更新中…" : "建立中…"; renderQueue();
+
+      await gh(`/repos/${state.cfg.owner}/${state.current.name}/contents/${encodePath(item.path)}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          message: commitMsg,
+          content: base64,
+          sha: existing?.sha || undefined,
+          branch: state.current.default_branch,
+        }),
+      });
+      item.status = "ok"; item.msg = existing ? "已更新" : "已建立";
+      okCount++;
+    } catch (e) {
+      item.status = "err"; item.msg = e.message || "失敗";
+      errCount++;
+    }
+    renderQueue();
+  }
+
+  btn.disabled = false;
+  toast(errCount === 0 ? "ok" : "err",
+        `提交完成：成功 ${okCount}，失敗 ${errCount}`);
+
+  // Refresh commits so the user sees their work immediately.
+  loadCommits();
+}
+
+async function commitMulti() {
+  const targets = [...state.checked];
+  if (targets.length === 0) { toast("err", "請先勾選至少一個 repo"); return; }
+  if (state.queue.length === 0) { toast("err", "請先加入要部署的檔案"); return; }
+
+  const btn = document.getElementById("commitAll");
+  btn.disabled = true;
+  const tmpl = document.getElementById("commitMsg").value.trim();
+
+  // Pre-read all files once (base64) — avoids re-reading for every repo.
+  for (const item of state.queue) {
+    if (!item._b64) {
+      try { item._b64 = await fileToBase64(item.file); }
+      catch (e) { item.status = "err"; item.msg = `讀檔失敗：${e.message}`; }
+    }
+  }
+
+  // Per-queue-item status is a map: path -> { repo -> status/msg }
+  // To reuse the existing renderQueue UI, we aggregate: show overall status as
+  // the worst of all target repos for that file.
+  let totalOk = 0, totalErr = 0;
+  const perItemResults = new Map(); // item.id -> { ok: [], err: [] }
+  state.queue.forEach(it => perItemResults.set(it.id, { ok: [], err: [] }));
+
+  for (const fullName of targets) {
+    const [owner, repoName] = fullName.split("/");
+    const repoObj = state.repos.find(r => r.full_name === fullName);
+    const branch = repoObj?.default_branch;
+
+    for (const item of state.queue) {
+      if (!item._b64) continue; // read failed earlier
+      item.status = "doing";
+      item.msg = `[${repoName}] 處理中…`;
+      renderQueue();
+
+      try {
+        // Per-repo SHA lookup (file might exist in some repos, not others).
+        let existingSha;
+        try {
+          const existing = await ghDirect(owner, repoName, `contents/${encodePath(item.path)}`);
+          existingSha = existing?.sha;
+        } catch (e) {
+          if (e.status !== 404) throw e;
+        }
+
+        const commitMsg = tmpl || `${existingSha ? "Update" : "Add"} ${item.path} via dash`;
+        await ghDirect(owner, repoName, `contents/${encodePath(item.path)}`, {
+          method: "PUT",
+          body: JSON.stringify({
+            message: commitMsg,
+            content: item._b64,
+            sha: existingSha || undefined,
+            branch,
+          }),
+        });
+        perItemResults.get(item.id).ok.push(repoName);
+        totalOk++;
+      } catch (e) {
+        perItemResults.get(item.id).err.push(`${repoName}: ${e.message}`);
+        totalErr++;
+      }
+    }
+  }
+
+  // Finalize status per queue item based on aggregated results.
+  for (const item of state.queue) {
+    const r = perItemResults.get(item.id);
+    if (!r) continue;
+    if (r.err.length === 0) {
+      item.status = "ok";
+      item.msg = `已推到 ${r.ok.length} repo：${r.ok.join(", ")}`;
+    } else if (r.ok.length === 0) {
+      item.status = "err";
+      item.msg = `全部失敗：${r.err.join(" · ")}`;
+    } else {
+      item.status = "err"; // partial
+      item.msg = `部分成功（${r.ok.length}/${r.ok.length + r.err.length}）— 失敗：${r.err.join(" · ")}`;
+    }
+    delete item._b64;
+  }
+  renderQueue();
+  btn.disabled = false;
+  toast(totalErr === 0 ? "ok" : "err",
+        `多 repo 部署完成：${totalOk} 次成功，${totalErr} 次失敗`);
+}
+
+// Low-level variant of gh() that takes repo params explicitly, for multi mode
+// where state.current isn't set.
+async function ghDirect(owner, repoName, subpath, opts = {}) {
+  return gh(`/repos/${owner}/${repoName}/${subpath}`, opts);
+}
+
+async function tryGetContent(path) {
+  try {
+    return await gh(`/repos/${state.cfg.owner}/${state.current.name}/contents/${encodePath(path)}`);
+  } catch (e) {
+    if (e.status === 404) return null;
+    throw e;
+  }
+}
+
+function encodePath(p) {
+  // Preserve slashes, encode segments.
+  return p.split("/").map(encodeURIComponent).join("/");
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const res = r.result;
+      if (typeof res !== "string") { reject(new Error("FileReader returned non-string")); return; }
+      const comma = res.indexOf(",");
+      resolve(comma >= 0 ? res.slice(comma + 1) : res);
+    };
+    r.onerror = () => reject(new Error("讀取檔案失敗"));
+    r.readAsDataURL(file);
+  });
+}
+
+// ── Utilities ───────────────────────────────────────────────────────────
+function escapeHtml(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+function escapeAttr(s) { return escapeHtml(s); }
+
+function fmtSize(n) {
+  if (n < 1024) return n + " B";
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+  return (n / 1024 / 1024).toFixed(2) + " MB";
+}
+
+function relTime(iso) {
+  const t = new Date(iso).getTime();
+  const diff = Date.now() - t;
+  const m = 60e3, h = 60 * m, d = 24 * h;
+  if (diff < h)  return Math.max(1, Math.floor(diff / m)) + "m";
+  if (diff < d)  return Math.floor(diff / h) + "h";
+  if (diff < 30 * d) return Math.floor(diff / d) + "d";
+  return new Date(iso).toISOString().slice(0, 10);
+}
+
+function toast(kind, msg) {
+  const box = document.getElementById("toasts");
+  const el = document.createElement("div");
+  el.className = "toast " + (kind || "");
+  el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(() => el.remove(), 4500);
+}
+
+// ── Boot ────────────────────────────────────────────────────────────────
+function wireSortAndMulti() {
+  const sortSel = document.getElementById("sortBy");
+  sortSel.value = state.sortBy;
+  sortSel.onchange = () => {
+    state.sortBy = sortSel.value;
+    localStorage.setItem(LS_SORT, state.sortBy);
+    renderRepoList();
+  };
+
+  const multiBtn = document.getElementById("multiToggle");
+  multiBtn.onclick = () => {
+    state.multi = !state.multi;
+    multiBtn.classList.toggle("on", state.multi);
+    multiBtn.innerHTML = state.multi ? "☑ 多選" : "☐ 多選";
+    document.body.classList.toggle("multi", state.multi);
+    if (!state.multi) state.checked.clear();
+    renderRepoList();
+    renderDetail();
+  };
+}
+wireSortAndMulti();
+
+if (!state.cfg) {
+  openConfigModal(true);
+} else {
+  document.getElementById("workerUrl").value = state.cfg.worker;
+  loadRepos();
+}
+</script>
+</body>
+</html>
