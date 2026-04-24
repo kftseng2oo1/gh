@@ -1157,6 +1157,12 @@ async function loadCommits() {
       `;
     }).join("");
   } catch (e) {
+    if (e.status === 404 || e.status === 409) {
+      // 409 Conflict = "Git Repository is empty" — GitHub's specific empty-repo response for /commits
+      box.innerHTML = `<div class="commits-empty">尚無 commit — 上傳第一個檔案會自動建立</div>`;
+      if (hint) hint.textContent = "";
+      return;
+    }
     box.innerHTML = `<div class="commits-empty">讀取失敗：${escapeHtml(e.message)}</div>`;
   }
 }
@@ -1401,6 +1407,14 @@ async function loadTree() {
       document.getElementById("treeHint").textContent = `${items.length} 個項目`;
     }
   } catch (e) {
+    // A freshly-created empty repo has no commits, so /branches/{default} returns 404.
+    // Surface this as a friendly "empty repo" message rather than a scary error.
+    if (e.status === 404 || /not found/i.test(e.message)) {
+      box.innerHTML = `<div class="tree-empty">空 repo — 上傳第一個檔案即可初始化</div>`;
+      const hint = document.getElementById("treeHint");
+      if (hint) hint.textContent = "尚無內容";
+      return;
+    }
     box.innerHTML = `<div class="tree-empty">載入失敗：${escapeHtml(e.message)}</div>`;
   }
 }
@@ -1983,6 +1997,12 @@ async function submitCreateRepo() {
       // Fallback: full refresh.
       await loadRepos();
     }
+
+    // Wait briefly for GitHub's edge nodes to propagate the new repo before
+    // we hit /branches, /contents, /commits on it. Without this pause the
+    // freshly-created repo often 404s on related endpoints for a few seconds
+    // and the detail view shows "Load failed".
+    await new Promise(r => setTimeout(r, 1500));
 
     // Open the new repo and focus the upload zone.
     await selectRepo(name);
