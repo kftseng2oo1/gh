@@ -555,24 +555,67 @@
   }
   .viewer-body .err { color: var(--rust); }
 
+  .modal.modal-wide {
+    width: 640px;
+  }
+  .modal .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 14px;
+    margin-bottom: 14px;
+  }
+  .modal .form-grid label.full,
+  .modal .form-grid .seg.full { grid-column: 1 / -1; }
+  .modal .form-grid label .hint {
+    font-size: 10.5px;
+    color: var(--ink-dimmer);
+    text-transform: none;
+    letter-spacing: 0;
+    margin-top: 2px;
+    font-weight: 400;
+  }
+  .modal .form-grid select {
+    background: var(--bg); border: 1px solid var(--line-2); color: var(--ink);
+    padding: 7px 9px; border-radius: 2px; font-size: 13px; font-family: var(--f-mono);
+  }
+  .modal .form-grid select:focus { outline: none; border-color: var(--amber); }
+  .modal .seg {
+    display: grid;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--ink-dim);
+  }
+  .modal .seg-lbl {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .modal .seg-opts {
+    display: flex; gap: 18px; align-items: center;
+    padding: 6px 0;
+  }
+  .modal .seg-opts label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px;
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+    cursor: pointer;
+    margin: 0;
+  }
+  .modal .seg-opts input {
+    width: auto;
+    margin: 0;
+    accent-color: var(--amber);
+  }
+  .modal .req { color: var(--amber); margin-left: 2px; }
+  .modal .form-grid input[aria-invalid="true"] { border-color: var(--rust); }
+
   /* ── responsive-ish ── */
   @media (max-width: 900px) {
     main { grid-template-columns: 1fr; height: auto; }
     aside.repos { border-right: none; border-bottom: 1px solid var(--line); max-height: 50vh; }
   }
 </style>
-
-<!-- PWA Meta — auto-injected by PWA 打包神器 -->
-<meta name="application-name" content="github管理">
-<meta name="description" content="github管理">
-<meta name="theme-color" content="#1a73e8">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="github管理">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon.svg">
-<script>if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').then(function(r){console.log('[SW] registered:',r.scope)}).catch(function(e){console.warn('[SW] failed:',e)});});}</script>
 </head>
 <body>
 
@@ -592,7 +635,10 @@
       <input id="search" placeholder="搜尋 repo… (例：App, tarot, ziwei)" autocomplete="off" />
       <div class="row">
         <span id="repoCount">0 repos</span>
-        <button id="refreshRepos">⟳ 重新整理</button>
+        <div style="display:flex; gap:6px">
+          <button id="newRepoBtn" title="建立新 repo">＋ 新建</button>
+          <button id="refreshRepos">⟳ 重新整理</button>
+        </div>
       </div>
       <div class="sort-row">
         <span>排序</span>
@@ -652,6 +698,69 @@
     </div>
     <div class="viewer-body" id="viewerBody">
       <div class="loading">載入中…</div>
+    </div>
+  </div>
+</div>
+
+<!-- Create new repo modal -->
+<div class="modal-bg" id="createRepoModal" style="display:none">
+  <div class="modal modal-wide">
+    <h2>建立新 Repository</h2>
+    <p>所有欄位照 GitHub 網頁版流程。建立後會自動載入到列表並開啟上傳介面。</p>
+
+    <div class="form-grid">
+      <label class="full">
+        名稱 <span class="req">*</span>
+        <input id="crName" placeholder="my-new-tool" autocomplete="off" />
+        <span class="hint" id="crNameHint">僅允許英數字、連字號、底線、句點</span>
+      </label>
+
+      <label class="full">
+        描述
+        <input id="crDesc" placeholder="一句話說明這個專案做什麼（可選）" autocomplete="off" />
+      </label>
+
+      <label class="full">
+        網站連結
+        <input id="crHomepage" placeholder="https://kftseng2oo1.github.io/my-new-tool/（可選）" autocomplete="off" />
+      </label>
+
+      <div class="seg full">
+        <span class="seg-lbl">可見性</span>
+        <div class="seg-opts">
+          <label><input type="radio" name="crVis" value="public" checked /> 🌐 公開</label>
+          <label><input type="radio" name="crVis" value="private" /> 🔒 私有</label>
+        </div>
+      </div>
+
+      <label>
+        .gitignore
+        <select id="crGitignore"><option value="">（無）</option></select>
+      </label>
+
+      <label>
+        License
+        <select id="crLicense"><option value="">（無）</option></select>
+      </label>
+
+      <label class="full">
+        Template（由你自己現有的 repo 作為樣板）
+        <select id="crTemplate"><option value="">（無 — 建立空 repo）</option></select>
+        <span class="hint">從 template 建立會複製該 repo 的所有檔案，其他選項（gitignore/license/auto_init）被忽略</span>
+      </label>
+
+      <div class="seg full">
+        <span class="seg-lbl">初始化</span>
+        <div class="seg-opts">
+          <label><input type="checkbox" id="crAutoInit" /> 建立初始 README.md</label>
+        </div>
+        <span class="hint">若要建完立刻拖自己的 index.html 上去，建議「不」勾選 — repo 保持空的比較乾淨</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="ghost" id="crCancel">取消</button>
+      <button class="primary" id="crSubmit">建立</button>
     </div>
   </div>
 </div>
@@ -1702,6 +1811,212 @@ function fileToBase64(file) {
     r.readAsDataURL(file);
   });
 }
+
+// ── Create repo ─────────────────────────────────────────────────────────
+const LS_TEMPLATES_CACHE = "gh-dash-templates-v1"; // gitignore + license lists
+const TEMPLATES_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
+
+async function getTemplateLists() {
+  // Returns { gitignore: [...], licenses: [{key,name}, ...] }
+  // Cached for a week — these lists change maybe once every few years.
+  try {
+    const raw = localStorage.getItem(LS_TEMPLATES_CACHE);
+    if (raw) {
+      const obj = JSON.parse(raw);
+      if (Date.now() - obj.fetchedAt < TEMPLATES_TTL_MS) return obj.data;
+    }
+  } catch {}
+
+  const result = { gitignore: [], licenses: [] };
+  try {
+    const gi = await gh("/gitignore/templates");
+    if (Array.isArray(gi)) result.gitignore = gi;
+  } catch (e) { /* non-fatal — dialog still works without it */ }
+  try {
+    const lic = await gh("/licenses");
+    if (Array.isArray(lic)) result.licenses = lic.map(l => ({ key: l.key, name: l.name }));
+  } catch (e) { /* non-fatal */ }
+
+  try {
+    localStorage.setItem(LS_TEMPLATES_CACHE, JSON.stringify({
+      fetchedAt: Date.now(),
+      data: result,
+    }));
+  } catch {}
+  return result;
+}
+
+async function openCreateRepoModal() {
+  const m = document.getElementById("createRepoModal");
+
+  // Reset form.
+  document.getElementById("crName").value = "";
+  document.getElementById("crDesc").value = "";
+  document.getElementById("crHomepage").value = "";
+  document.querySelector('input[name="crVis"][value="public"]').checked = true;
+  document.getElementById("crAutoInit").checked = false;
+  document.getElementById("crGitignore").value = "";
+  document.getElementById("crLicense").value = "";
+  document.getElementById("crTemplate").value = "";
+  document.getElementById("crName").setAttribute("aria-invalid", "false");
+  document.getElementById("crNameHint").style.color = "";
+
+  // Populate template dropdown from current repo list (only your own templates).
+  const tplSel = document.getElementById("crTemplate");
+  tplSel.innerHTML = `<option value="">（無 — 建立空 repo）</option>`;
+  state.repos
+    .filter(r => r.is_template)
+    .forEach(r => {
+      const opt = document.createElement("option");
+      opt.value = r.name;
+      opt.textContent = r.name;
+      tplSel.appendChild(opt);
+    });
+
+  m.style.display = "flex";
+  document.getElementById("crName").focus();
+
+  // Lazy-populate .gitignore + license (user can still submit without waiting).
+  const { gitignore, licenses } = await getTemplateLists();
+  const giSel = document.getElementById("crGitignore");
+  const licSel = document.getElementById("crLicense");
+  // Rebuild only if still on the first "(無)" option (not already populated).
+  if (giSel.options.length <= 1) {
+    gitignore.forEach(name => {
+      const o = document.createElement("option");
+      o.value = name; o.textContent = name;
+      giSel.appendChild(o);
+    });
+  }
+  if (licSel.options.length <= 1) {
+    licenses.forEach(l => {
+      const o = document.createElement("option");
+      o.value = l.key; o.textContent = l.name;
+      licSel.appendChild(o);
+    });
+  }
+}
+
+function closeCreateRepoModal() {
+  document.getElementById("createRepoModal").style.display = "none";
+}
+
+async function submitCreateRepo() {
+  const name = document.getElementById("crName").value.trim();
+  const desc = document.getElementById("crDesc").value.trim();
+  const homepage = document.getElementById("crHomepage").value.trim();
+  const vis = document.querySelector('input[name="crVis"]:checked').value;
+  const autoInit = document.getElementById("crAutoInit").checked;
+  const gitignore = document.getElementById("crGitignore").value;
+  const license = document.getElementById("crLicense").value;
+  const template = document.getElementById("crTemplate").value;
+
+  // GitHub accepts: letters, digits, underscore, hyphen, period. Max 100 chars.
+  if (!/^[A-Za-z0-9._-]{1,100}$/.test(name)) {
+    document.getElementById("crName").setAttribute("aria-invalid", "true");
+    const hint = document.getElementById("crNameHint");
+    hint.textContent = "名稱格式無效：僅限英數字、連字號、底線、句點，不能空白";
+    hint.style.color = "var(--rust)";
+    return;
+  }
+  // Collision check.
+  if (state.repos.some(r => r.name.toLowerCase() === name.toLowerCase())) {
+    document.getElementById("crName").setAttribute("aria-invalid", "true");
+    const hint = document.getElementById("crNameHint");
+    hint.textContent = `已存在同名 repo：${name}`;
+    hint.style.color = "var(--rust)";
+    return;
+  }
+
+  const btn = document.getElementById("crSubmit");
+  btn.disabled = true;
+  btn.textContent = "建立中…";
+
+  try {
+    let created;
+    if (template) {
+      // Create from one of your own templates.
+      // POST /repos/{owner}/{template}/generate
+      created = await gh(`/repos/${state.cfg.owner}/${template}/generate`, {
+        method: "POST",
+        body: JSON.stringify({
+          owner: state.cfg.owner,
+          name,
+          description: desc || undefined,
+          private: vis === "private",
+          include_all_branches: false,
+        }),
+      });
+    } else {
+      const body = {
+        name,
+        private: vis === "private",
+        auto_init: autoInit,
+      };
+      if (desc)      body.description = desc;
+      if (homepage)  body.homepage = homepage;
+      if (gitignore) body.gitignore_template = gitignore;
+      if (license)   body.license_template = license;
+
+      created = await gh("/user/repos", {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+    }
+
+    toast("ok", `已建立 ${name}`);
+    closeCreateRepoModal();
+
+    // Inject into local state immediately so user doesn't need to wait for refresh.
+    if (created && created.full_name) {
+      // Remove any stale entry (shouldn't happen, but belt-and-suspenders).
+      state.repos = state.repos.filter(r => r.full_name !== created.full_name);
+      state.repos.push(created);
+      renderRepoList();
+      // Also update the "known repos" baseline so it doesn't re-toast as "new".
+      try {
+        localStorage.setItem(LS_REPO_NAMES, JSON.stringify(
+          state.repos.map(r => r.full_name).sort()
+        ));
+      } catch {}
+    } else {
+      // Fallback: full refresh.
+      await loadRepos();
+    }
+
+    // Open the new repo and focus the upload zone.
+    await selectRepo(name);
+    // Scroll the drop zone into view after render settles.
+    setTimeout(() => {
+      const dz = document.getElementById("drop");
+      if (dz) {
+        dz.scrollIntoView({ behavior: "smooth", block: "center" });
+        dz.classList.add("hover"); // pulse the border briefly to draw the eye
+        setTimeout(() => dz.classList.remove("hover"), 1200);
+      }
+    }, 150);
+
+  } catch (e) {
+    // GitHub often returns detailed errors for create-repo; surface them.
+    const detail = e.data?.errors?.[0]?.message || e.message;
+    toast("err", `建立失敗：${detail}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "建立";
+  }
+}
+
+// Wire up.
+document.getElementById("newRepoBtn").onclick = openCreateRepoModal;
+document.getElementById("crCancel").onclick = closeCreateRepoModal;
+document.getElementById("crSubmit").onclick = submitCreateRepo;
+document.getElementById("createRepoModal").addEventListener("click", (e) => {
+  if (e.target.id === "createRepoModal") closeCreateRepoModal();
+});
+// Let Enter in the name field submit.
+document.getElementById("crName").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); submitCreateRepo(); }
+});
 
 // ── Utilities ───────────────────────────────────────────────────────────
 function escapeHtml(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
