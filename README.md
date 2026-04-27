@@ -1,6 +1,6 @@
-# 檔案上傳神器
+# github
 
-> 檔案上傳神器,透過手機把檔案傳到GitHub
+> github
 
 ## 📦 包含檔案
 
@@ -18,7 +18,7 @@
 ```bash
 git init
 git add .
-git commit -m "init: 檔案上傳神器 PWA"
+git commit -m "init: github PWA"
 git branch -M main
 git remote add origin https://github.com/<username>/<repo>.git
 git push -u origin main
