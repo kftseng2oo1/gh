@@ -171,6 +171,25 @@
   .chip.priv  { color: var(--rust); border-color: #c76a4f50; }
   .chip.branch{ color: var(--amber); border-color: #d99a3f50; }
 
+  .chip.chip-action {
+    background: #d99a3f15;
+    color: var(--amber);
+    border: 1px solid var(--amber);
+    cursor: pointer;
+    font-family: var(--f-mono);
+    font-size: 10.5px;
+    padding: 2px 10px;
+    transition: background 0.15s;
+  }
+  .chip.chip-action:hover:not(:disabled) {
+    background: var(--amber);
+    color: #1a1611;
+  }
+  .chip.chip-action:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   .detail-body { flex: 1; overflow-y: auto; padding: 22px 26px 60px; }
   .detail-body::-webkit-scrollbar { width: 10px; }
   .detail-body::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 5px; }
@@ -555,24 +574,135 @@
   }
   .viewer-body .err { color: var(--rust); }
 
+  .modal.modal-wide {
+    width: 640px;
+  }
+  .modal .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 14px;
+    margin-bottom: 14px;
+  }
+  .modal .form-grid label.full,
+  .modal .form-grid .seg.full { grid-column: 1 / -1; }
+  .modal .form-grid label .hint {
+    font-size: 10.5px;
+    color: var(--ink-dimmer);
+    text-transform: none;
+    letter-spacing: 0;
+    margin-top: 2px;
+    font-weight: 400;
+  }
+  .modal .form-grid select {
+    background: var(--bg); border: 1px solid var(--line-2); color: var(--ink);
+    padding: 7px 9px; border-radius: 2px; font-size: 13px; font-family: var(--f-mono);
+  }
+  .modal .form-grid select:focus { outline: none; border-color: var(--amber); }
+  .modal .seg {
+    display: grid;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--ink-dim);
+  }
+  .modal .seg-lbl {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .modal .seg-opts {
+    display: flex; gap: 18px; align-items: center;
+    padding: 6px 0;
+  }
+  .modal .seg-opts label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px;
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+    cursor: pointer;
+    margin: 0;
+  }
+  .modal .seg-opts input {
+    width: auto;
+    margin: 0;
+    accent-color: var(--amber);
+  }
+  .modal .req { color: var(--amber); margin-left: 2px; }
+  .modal .form-grid input[aria-invalid="true"] { border-color: var(--rust); }
+
+  /* ── Danger zone ── */
+  .danger-zone {
+    margin-top: 50px;
+    border: 1px solid #c76a4f40;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .danger-head {
+    padding: 6px 14px;
+    background: #c76a4f20;
+    color: var(--rust);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-bottom: 1px solid #c76a4f40;
+  }
+  .danger-body {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-content: space-between;
+  }
+  .danger-text b {
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .danger-hint {
+    color: var(--ink-dimmer);
+    font-size: 11px;
+    margin-top: 2px;
+  }
+  .danger-btn {
+    background: transparent;
+    border: 1px solid var(--rust);
+    color: var(--rust);
+    padding: 7px 16px;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: var(--f-mono);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .danger-btn:hover:not(:disabled) {
+    background: var(--rust);
+    color: #1a1611;
+  }
+  .danger-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* ── Config validation ── */
+  .modal .probe-status {
+    font-size: 11px;
+    color: var(--ink-dimmer);
+    margin-top: 6px;
+    min-height: 16px;
+  }
+  .modal .probe-status.ok { color: var(--moss); }
+  .modal .probe-status.err { color: var(--rust); }
+  .modal .probe-status .sp {
+    display: inline-block;
+    width: 10px;
+    animation: blink 1s steps(2) infinite;
+  }
+
   /* ── responsive-ish ── */
   @media (max-width: 900px) {
     main { grid-template-columns: 1fr; height: auto; }
     aside.repos { border-right: none; border-bottom: 1px solid var(--line); max-height: 50vh; }
   }
 </style>
-
-<!-- PWA Meta — auto-injected by PWA 打包神器 -->
-<meta name="application-name" content="github">
-<meta name="description" content="github">
-<meta name="theme-color" content="#1a73e8">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="github">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon.svg">
-<script>if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').then(function(r){console.log('[SW] registered:',r.scope)}).catch(function(e){console.warn('[SW] failed:',e)});});}</script>
 </head>
 <body>
 
@@ -592,7 +722,10 @@
       <input id="search" placeholder="搜尋 repo… (例：App, tarot, ziwei)" autocomplete="off" />
       <div class="row">
         <span id="repoCount">0 repos</span>
-        <button id="refreshRepos">⟳ 重新整理</button>
+        <div style="display:flex; gap:6px">
+          <button id="newRepoBtn" title="建立新 repo">＋ 新建</button>
+          <button id="refreshRepos">⟳ 重新整理</button>
+        </div>
       </div>
       <div class="sort-row">
         <span>排序</span>
@@ -634,6 +767,7 @@
       DASH SECRET (選填，對應 Worker 的 X-Dash-Key)
       <input id="cfgSecret" type="password" placeholder="留空代表 Worker 沒設 DASH_SECRET" />
     </label>
+    <div class="probe-status" id="cfgProbe"></div>
     <div class="actions">
       <button class="ghost" id="cfgCancel">取消</button>
       <button class="primary" id="cfgSave">儲存</button>
@@ -652,6 +786,85 @@
     </div>
     <div class="viewer-body" id="viewerBody">
       <div class="loading">載入中…</div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete repo confirmation modal -->
+<div class="modal-bg" id="deleteRepoModal" style="display:none">
+  <div class="modal">
+    <h2 style="color: var(--rust)">刪除 Repository</h2>
+    <p>你即將永久刪除 <b id="delRepoName" style="color:var(--ink); font-family:var(--f-mono)">—</b>。這個動作<b>無法復原</b>。所有檔案、commit 歷史、分支、issue 會立刻消失。</p>
+    <label>
+      請輸入 repo 名稱 <span class="req" style="color:var(--rust)">*</span> 以確認
+      <input id="delConfirm" placeholder="輸入 repo 名稱" autocomplete="off" autocapitalize="off" />
+    </label>
+    <div class="actions">
+      <button class="ghost" id="delCancel">取消</button>
+      <button class="danger-btn" id="delSubmit" disabled>確認刪除</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create new repo modal -->
+<div class="modal-bg" id="createRepoModal" style="display:none">
+  <div class="modal modal-wide">
+    <h2>建立新 Repository</h2>
+    <p>所有欄位照 GitHub 網頁版流程。建立後會自動載入到列表並開啟上傳介面。</p>
+
+    <div class="form-grid">
+      <label class="full">
+        名稱 <span class="req">*</span>
+        <input id="crName" placeholder="my-new-tool" autocomplete="off" />
+        <span class="hint" id="crNameHint">僅允許英數字、連字號、底線、句點</span>
+      </label>
+
+      <label class="full">
+        描述
+        <input id="crDesc" placeholder="一句話說明這個專案做什麼（可選）" autocomplete="off" />
+      </label>
+
+      <label class="full">
+        網站連結
+        <input id="crHomepage" placeholder="https://kftseng2oo1.github.io/my-new-tool/（可選）" autocomplete="off" />
+      </label>
+
+      <div class="seg full">
+        <span class="seg-lbl">可見性</span>
+        <div class="seg-opts">
+          <label><input type="radio" name="crVis" value="public" checked /> 🌐 公開</label>
+          <label><input type="radio" name="crVis" value="private" /> 🔒 私有</label>
+        </div>
+      </div>
+
+      <label>
+        .gitignore
+        <select id="crGitignore"><option value="">（無）</option></select>
+      </label>
+
+      <label>
+        License
+        <select id="crLicense"><option value="">（無）</option></select>
+      </label>
+
+      <label class="full">
+        Template（由你自己現有的 repo 作為樣板）
+        <select id="crTemplate"><option value="">（無 — 建立空 repo）</option></select>
+        <span class="hint">從 template 建立會複製該 repo 的所有檔案，其他選項（gitignore/license/auto_init）被忽略</span>
+      </label>
+
+      <div class="seg full">
+        <span class="seg-lbl">初始化</span>
+        <div class="seg-opts">
+          <label><input type="checkbox" id="crAutoInit" /> 建立初始 README.md</label>
+        </div>
+        <span class="hint">若要建完立刻拖自己的 index.html 上去，建議「不」勾選 — repo 保持空的比較乾淨</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="ghost" id="crCancel">取消</button>
+      <button class="primary" id="crSubmit">建立</button>
     </div>
   </div>
 </div>
@@ -700,6 +913,11 @@ function openConfigModal(initial=false) {
   document.getElementById("cfgWorker").value = state.cfg?.worker || "";
   document.getElementById("cfgOwner").value  = state.cfg?.owner  || "kftseng2oo1";
   document.getElementById("cfgSecret").value = state.cfg?.secret || "";
+  // Clear probe state from any previous attempt.
+  const probe = document.getElementById("cfgProbe");
+  if (probe) { probe.className = "probe-status"; probe.textContent = ""; }
+  const saveBtn = document.getElementById("cfgSave");
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "儲存"; }
   m.style.display = "flex";
   m.dataset.initial = initial ? "1" : "0";
 }
@@ -713,15 +931,142 @@ document.getElementById("cfgCancel").onclick = () => {
   }
   closeConfigModal();
 };
-document.getElementById("cfgSave").onclick = () => {
+document.getElementById("cfgSave").onclick = async () => {
   const worker = document.getElementById("cfgWorker").value.trim().replace(/\/$/, "");
   const owner  = document.getElementById("cfgOwner").value.trim();
   const secret = document.getElementById("cfgSecret").value;
-  if (!worker || !owner) { toast("err", "Worker URL 和 Owner 必填"); return; }
-  saveCfg({ worker, owner, secret });
-  closeConfigModal();
-  loadRepos();
+  const probeEl = document.getElementById("cfgProbe");
+  const saveBtn = document.getElementById("cfgSave");
+
+  if (!worker || !owner) {
+    probeEl.className = "probe-status err";
+    probeEl.textContent = "Worker URL 和 Owner 必填";
+    return;
+  }
+  if (!/^https:\/\/[^/\s]+\.workers\.dev$/.test(worker) && !/^https:\/\/[^/\s]+$/.test(worker)) {
+    probeEl.className = "probe-status err";
+    probeEl.textContent = "格式不對 — Worker URL 應為 https://xxx.workers.dev（結尾不要加斜線）";
+    return;
+  }
+
+  // Probe: try hitting /user/repos with the given URL + secret.
+  saveBtn.disabled = true;
+  saveBtn.textContent = "檢查中…";
+  probeEl.className = "probe-status";
+  probeEl.innerHTML = `正在連線測試 <span class="sp">…</span>`;
+
+  const diagnosis = await probeWorker(worker, secret);
+
+  if (diagnosis.ok) {
+    probeEl.className = "probe-status ok";
+    probeEl.textContent = `連線成功 ✓ ${diagnosis.detail || ""}`;
+    // Small delay so user sees the success state before we close.
+    setTimeout(() => {
+      saveCfg({ worker, owner, secret });
+      closeConfigModal();
+      loadRepos();
+    }, 400);
+    return;
+  }
+
+  // Failure: restore button, show actionable hint.
+  saveBtn.disabled = false;
+  saveBtn.textContent = "儲存";
+  probeEl.className = "probe-status err";
+  probeEl.innerHTML = diagnosis.msg;
 };
+
+async function probeWorker(workerUrl, secret) {
+  // Returns { ok: bool, detail?: string, msg?: string }
+  // Tries to classify the failure into one of:
+  //   - DNS / network: "Load failed", TypeError
+  //   - Worker not found: Cloudflare 404 HTML
+  //   - Worker misconfigured: 500 with "Worker misconfigured"
+  //   - DASH_SECRET mismatch: 401 Unauthorized
+  //   - OWNER mismatch / allowlist: 403 Path not allowed
+  //   - Bad PAT: 401 "Bad credentials"
+  //   - Success: 200 JSON array
+  let res, text;
+  try {
+    const headers = {};
+    if (secret) headers["X-Dash-Key"] = secret;
+    res = await fetch(workerUrl + "/user/repos?per_page=1", { headers });
+    text = await res.text();
+  } catch (e) {
+    // Network-level failure. Almost always means the Worker URL is wrong —
+    // typo in subdomain, missing https, deleted Worker, etc.
+    return {
+      ok: false,
+      msg: "網路連不到這個 Worker URL — 很可能是<b>網址拼錯</b>（最常見的是 <code>manager</code> 打成 <code>manger</code>）、子網域錯、或 Worker 不存在。請仔細比對。",
+    };
+  }
+
+  // Try to parse JSON, otherwise treat body as plain text (for Cloudflare 404 HTML).
+  let body;
+  try { body = JSON.parse(text); } catch { body = null; }
+
+  // Cloudflare "There is nothing here yet" — 404 HTML page when worker subdomain doesn't exist.
+  if (res.status === 404 && text.includes("There is nothing here yet")) {
+    return {
+      ok: false,
+      msg: "Cloudflare 找不到這個 Worker — 網址拼錯，或 Worker 沒部署。",
+    };
+  }
+
+  // 200 OK — 應該是 array
+  if (res.status === 200 && Array.isArray(body)) {
+    return { ok: true, detail: `偵測到 ${body.length > 0 ? "repo 存取正常" : "帳號但無 repo"}` };
+  }
+
+  // Worker-level errors we designed for.
+  const errMsg = body?.error || body?.message || text.slice(0, 120);
+
+  if (res.status === 401) {
+    if (/Unauthorized/i.test(errMsg)) {
+      return {
+        ok: false,
+        msg: "Worker 拒絕請求：<b>DASH SECRET 不對</b>。檢查設定的密鑰跟 Cloudflare 環境變數 <code>DASH_SECRET</code> 是否完全一致（大小寫、空白、全形半形）。",
+      };
+    }
+    if (/Bad credentials/i.test(errMsg)) {
+      return {
+        ok: false,
+        msg: "GitHub 拒絕 token：PAT 失效或過期。去 GitHub 檢查 <code>GITHUB_TOKEN</code>。",
+      };
+    }
+    return { ok: false, msg: `401 Unauthorized：${escapeHtml(errMsg)}` };
+  }
+
+  if (res.status === 403) {
+    if (/Path not allowed/i.test(errMsg)) {
+      return {
+        ok: false,
+        msg: "Worker allowlist 擋下請求：OWNER 不符或 Worker 版本過舊。檢查 Owner 欄位大小寫是否跟 Cloudflare 環境變數 <code>OWNER</code> 一致。",
+      };
+    }
+    if (/Resource not accessible/i.test(errMsg)) {
+      return {
+        ok: false,
+        msg: "PAT 權限不足。fine-grained PAT 至少要 Contents RW + Metadata RO（建/刪 repo 還要 Administration RW）。",
+      };
+    }
+    return { ok: false, msg: `403 Forbidden：${escapeHtml(errMsg)}` };
+  }
+
+  if (res.status === 500 && /misconfigured/i.test(errMsg)) {
+    return {
+      ok: false,
+      msg: "Worker 環境變數不完整：檢查 Cloudflare 端 <code>GITHUB_TOKEN</code> 和 <code>OWNER</code> 是否都有設。",
+    };
+  }
+
+  if (res.status >= 500) {
+    return { ok: false, msg: `Worker 錯誤 ${res.status}：${escapeHtml(errMsg)}` };
+  }
+
+  // Catch-all
+  return { ok: false, msg: `非預期回應 ${res.status}：${escapeHtml(errMsg)}` };
+}
 
 // ── API ─────────────────────────────────────────────────────────────────
 async function gh(path, opts = {}) {
@@ -919,7 +1264,9 @@ function renderDetail() {
       <div class="chips">
         <span class="chip branch">⎇ ${escapeHtml(r.default_branch || "main")}</span>
         <span class="chip ${r.private ? "priv" : ""}">${r.private ? "🔒 private" : "🌐 public"}</span>
-        ${r.has_pages ? `<span class="chip pages">📄 <a href="${pagesUrl}" target="_blank" rel="noopener">pages</a></span>` : ""}
+        ${r.has_pages
+          ? `<span class="chip pages">📄 <a href="${pagesUrl}" target="_blank" rel="noopener">pages</a></span>`
+          : `<button class="chip chip-action" id="enablePagesBtn" title="啟用 GitHub Pages">⚡ 啟用 Pages</button>`}
         <a class="chip" href="${r.html_url}" target="_blank" rel="noopener">↗ GitHub</a>
       </div>
     </div>
@@ -960,12 +1307,26 @@ function renderDetail() {
       </div>
       <div class="commits" id="commits"></div>
 
+      <div class="danger-zone">
+        <div class="danger-head">危險區</div>
+        <div class="danger-body">
+          <div class="danger-text">
+            <b>刪除此 repository</b>
+            <div class="danger-hint">此操作無法復原，所有檔案、commit 歷史、issue 會一併消失</div>
+          </div>
+          <button class="danger-btn" id="deleteRepoBtn">刪除</button>
+        </div>
+      </div>
+
     </div>
   `;
 
   wireDropzone();
   document.getElementById("clearQueue").onclick = () => { state.queue = []; renderQueue(); };
   document.getElementById("commitAll").onclick = commitAll;
+  document.getElementById("deleteRepoBtn").onclick = openDeleteRepoModal;
+  const enableBtn = document.getElementById("enablePagesBtn");
+  if (enableBtn) enableBtn.onclick = enablePages;
   loadTree();
   loadSummary();
 }
@@ -1048,6 +1409,12 @@ async function loadCommits() {
       `;
     }).join("");
   } catch (e) {
+    if (e.status === 404 || e.status === 409) {
+      // 409 Conflict = "Git Repository is empty" — GitHub's specific empty-repo response for /commits
+      box.innerHTML = `<div class="commits-empty">尚無 commit — 上傳第一個檔案會自動建立</div>`;
+      if (hint) hint.textContent = "";
+      return;
+    }
     box.innerHTML = `<div class="commits-empty">讀取失敗：${escapeHtml(e.message)}</div>`;
   }
 }
@@ -1292,6 +1659,14 @@ async function loadTree() {
       document.getElementById("treeHint").textContent = `${items.length} 個項目`;
     }
   } catch (e) {
+    // A freshly-created empty repo has no commits, so /branches/{default} returns 404.
+    // Surface this as a friendly "empty repo" message rather than a scary error.
+    if (e.status === 404 || /not found/i.test(e.message)) {
+      box.innerHTML = `<div class="tree-empty">空 repo — 上傳第一個檔案即可初始化</div>`;
+      const hint = document.getElementById("treeHint");
+      if (hint) hint.textContent = "尚無內容";
+      return;
+    }
     box.innerHTML = `<div class="tree-empty">載入失敗：${escapeHtml(e.message)}</div>`;
   }
 }
@@ -1702,6 +2077,342 @@ function fileToBase64(file) {
     r.readAsDataURL(file);
   });
 }
+
+// ── Enable GitHub Pages ─────────────────────────────────────────────────
+async function enablePages() {
+  const r = state.current;
+  if (!r) return;
+  const btn = document.getElementById("enablePagesBtn");
+  if (!btn) return;
+
+  // Verify the repo has at least one commit — Pages can't deploy from an empty repo.
+  // We already showed "尚無 commit" hint in the commits block if so; double-check via API.
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = "啟用中…";
+
+  try {
+    // POST /repos/{owner}/{repo}/pages
+    // Build source: branch from repo's default_branch, path "/" (root).
+    const branch = r.default_branch || "main";
+    await gh(`/repos/${state.cfg.owner}/${r.name}/pages`, {
+      method: "POST",
+      body: JSON.stringify({
+        source: { branch, path: "/" },
+        // build_type defaults to "legacy" which works for plain static HTML — good for your single-file PWAs.
+      }),
+    });
+
+    toast("ok", `已啟用 Pages — 第一次部署需要 1-2 分鐘`);
+
+    // Update local state so the UI reflects the change immediately.
+    r.has_pages = true;
+    state.repos = state.repos.map(x => x.full_name === r.full_name ? r : x);
+    renderRepoList();
+    renderDetail();
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = originalText;
+
+    // Surface specific failure modes.
+    const msg = e.data?.message || e.message;
+    if (e.status === 403) {
+      toast("err", `啟用失敗：PAT 缺少 Pages 權限 — 請去 GitHub token 設定加 Pages: Read and write`);
+    } else if (e.status === 409 || /empty/i.test(msg)) {
+      toast("err", `啟用失敗：repo 沒有任何 commit，無法部署 Pages`);
+    } else if (e.status === 422 && /already exists/i.test(msg)) {
+      // Edge case: Pages was already enabled but our local state didn't know.
+      toast("ok", `Pages 其實已啟用，重新整理列表中…`);
+      r.has_pages = true;
+      renderRepoList();
+      renderDetail();
+    } else {
+      toast("err", `啟用失敗：${msg}`);
+    }
+  }
+}
+
+// ── Delete repo ─────────────────────────────────────────────────────────
+function openDeleteRepoModal() {
+  if (!state.current) return;
+  const m = document.getElementById("deleteRepoModal");
+  const nameEl = document.getElementById("delRepoName");
+  const input = document.getElementById("delConfirm");
+  const submit = document.getElementById("delSubmit");
+
+  nameEl.textContent = state.current.name;
+  input.value = "";
+  submit.disabled = true;
+  m.style.display = "flex";
+  setTimeout(() => input.focus(), 50);
+
+  // Enable submit only when typed name matches exactly.
+  input.oninput = () => {
+    submit.disabled = input.value !== state.current.name;
+  };
+}
+
+function closeDeleteRepoModal() {
+  document.getElementById("deleteRepoModal").style.display = "none";
+}
+
+async function submitDeleteRepo() {
+  const name = state.current?.name;
+  if (!name) return;
+  const input = document.getElementById("delConfirm");
+  if (input.value !== name) return; // double-check
+
+  const submit = document.getElementById("delSubmit");
+  submit.disabled = true;
+  submit.textContent = "刪除中…";
+
+  try {
+    // DELETE /repos/{owner}/{repo} — 204 No Content on success.
+    await gh(`/repos/${state.cfg.owner}/${name}`, { method: "DELETE" });
+
+    toast("ok", `已刪除 ${name}`);
+    closeDeleteRepoModal();
+
+    // Remove from local state, clear current selection.
+    state.repos = state.repos.filter(r => r.name !== name);
+    state.current = null;
+    renderRepoList();
+    document.getElementById("detail").innerHTML =
+      `<div class="placeholder">從左側選擇一個專案</div>`;
+
+    // Update the "known repos" baseline so it doesn't toast as "deleted" next refresh.
+    try {
+      localStorage.setItem(LS_REPO_NAMES, JSON.stringify(
+        state.repos.map(r => r.full_name).sort()
+      ));
+      // Also drop the cached summary for this repo.
+      localStorage.removeItem(LS_SUMMARY_PREFIX + `${state.cfg.owner}/${name}`);
+    } catch {}
+  } catch (e) {
+    const detail = e.data?.message || e.message;
+    toast("err", `刪除失敗：${detail}`);
+    submit.disabled = false;
+    submit.textContent = "確認刪除";
+  }
+}
+
+document.getElementById("delCancel").onclick = closeDeleteRepoModal;
+document.getElementById("delSubmit").onclick = submitDeleteRepo;
+document.getElementById("deleteRepoModal").addEventListener("click", (e) => {
+  if (e.target.id === "deleteRepoModal") closeDeleteRepoModal();
+});
+
+// ── Create repo ─────────────────────────────────────────────────────────
+const LS_TEMPLATES_CACHE = "gh-dash-templates-v1"; // gitignore + license lists
+const TEMPLATES_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
+
+async function getTemplateLists() {
+  // Returns { gitignore: [...], licenses: [{key,name}, ...] }
+  // Cached for a week — these lists change maybe once every few years.
+  try {
+    const raw = localStorage.getItem(LS_TEMPLATES_CACHE);
+    if (raw) {
+      const obj = JSON.parse(raw);
+      if (Date.now() - obj.fetchedAt < TEMPLATES_TTL_MS) return obj.data;
+    }
+  } catch {}
+
+  const result = { gitignore: [], licenses: [] };
+  try {
+    const gi = await gh("/gitignore/templates");
+    if (Array.isArray(gi)) result.gitignore = gi;
+  } catch (e) { /* non-fatal — dialog still works without it */ }
+  try {
+    const lic = await gh("/licenses");
+    if (Array.isArray(lic)) result.licenses = lic.map(l => ({ key: l.key, name: l.name }));
+  } catch (e) { /* non-fatal */ }
+
+  try {
+    localStorage.setItem(LS_TEMPLATES_CACHE, JSON.stringify({
+      fetchedAt: Date.now(),
+      data: result,
+    }));
+  } catch {}
+  return result;
+}
+
+async function openCreateRepoModal() {
+  const m = document.getElementById("createRepoModal");
+
+  // Reset form.
+  document.getElementById("crName").value = "";
+  document.getElementById("crDesc").value = "";
+  document.getElementById("crHomepage").value = "";
+  document.querySelector('input[name="crVis"][value="public"]').checked = true;
+  document.getElementById("crAutoInit").checked = false;
+  document.getElementById("crGitignore").value = "";
+  document.getElementById("crLicense").value = "";
+  document.getElementById("crTemplate").value = "";
+  document.getElementById("crName").setAttribute("aria-invalid", "false");
+  document.getElementById("crNameHint").style.color = "";
+
+  // Populate template dropdown from current repo list (only your own templates).
+  const tplSel = document.getElementById("crTemplate");
+  tplSel.innerHTML = `<option value="">（無 — 建立空 repo）</option>`;
+  state.repos
+    .filter(r => r.is_template)
+    .forEach(r => {
+      const opt = document.createElement("option");
+      opt.value = r.name;
+      opt.textContent = r.name;
+      tplSel.appendChild(opt);
+    });
+
+  m.style.display = "flex";
+  document.getElementById("crName").focus();
+
+  // Lazy-populate .gitignore + license (user can still submit without waiting).
+  const { gitignore, licenses } = await getTemplateLists();
+  const giSel = document.getElementById("crGitignore");
+  const licSel = document.getElementById("crLicense");
+  // Rebuild only if still on the first "(無)" option (not already populated).
+  if (giSel.options.length <= 1) {
+    gitignore.forEach(name => {
+      const o = document.createElement("option");
+      o.value = name; o.textContent = name;
+      giSel.appendChild(o);
+    });
+  }
+  if (licSel.options.length <= 1) {
+    licenses.forEach(l => {
+      const o = document.createElement("option");
+      o.value = l.key; o.textContent = l.name;
+      licSel.appendChild(o);
+    });
+  }
+}
+
+function closeCreateRepoModal() {
+  document.getElementById("createRepoModal").style.display = "none";
+}
+
+async function submitCreateRepo() {
+  const name = document.getElementById("crName").value.trim();
+  const desc = document.getElementById("crDesc").value.trim();
+  const homepage = document.getElementById("crHomepage").value.trim();
+  const vis = document.querySelector('input[name="crVis"]:checked').value;
+  const autoInit = document.getElementById("crAutoInit").checked;
+  const gitignore = document.getElementById("crGitignore").value;
+  const license = document.getElementById("crLicense").value;
+  const template = document.getElementById("crTemplate").value;
+
+  // GitHub accepts: letters, digits, underscore, hyphen, period. Max 100 chars.
+  if (!/^[A-Za-z0-9._-]{1,100}$/.test(name)) {
+    document.getElementById("crName").setAttribute("aria-invalid", "true");
+    const hint = document.getElementById("crNameHint");
+    hint.textContent = "名稱格式無效：僅限英數字、連字號、底線、句點，不能空白";
+    hint.style.color = "var(--rust)";
+    return;
+  }
+  // Collision check.
+  if (state.repos.some(r => r.name.toLowerCase() === name.toLowerCase())) {
+    document.getElementById("crName").setAttribute("aria-invalid", "true");
+    const hint = document.getElementById("crNameHint");
+    hint.textContent = `已存在同名 repo：${name}`;
+    hint.style.color = "var(--rust)";
+    return;
+  }
+
+  const btn = document.getElementById("crSubmit");
+  btn.disabled = true;
+  btn.textContent = "建立中…";
+
+  try {
+    let created;
+    if (template) {
+      // Create from one of your own templates.
+      // POST /repos/{owner}/{template}/generate
+      created = await gh(`/repos/${state.cfg.owner}/${template}/generate`, {
+        method: "POST",
+        body: JSON.stringify({
+          owner: state.cfg.owner,
+          name,
+          description: desc || undefined,
+          private: vis === "private",
+          include_all_branches: false,
+        }),
+      });
+    } else {
+      const body = {
+        name,
+        private: vis === "private",
+        auto_init: autoInit,
+      };
+      if (desc)      body.description = desc;
+      if (homepage)  body.homepage = homepage;
+      if (gitignore) body.gitignore_template = gitignore;
+      if (license)   body.license_template = license;
+
+      created = await gh("/user/repos", {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+    }
+
+    toast("ok", `已建立 ${name}`);
+    closeCreateRepoModal();
+
+    // Inject into local state immediately so user doesn't need to wait for refresh.
+    if (created && created.full_name) {
+      // Remove any stale entry (shouldn't happen, but belt-and-suspenders).
+      state.repos = state.repos.filter(r => r.full_name !== created.full_name);
+      state.repos.push(created);
+      renderRepoList();
+      // Also update the "known repos" baseline so it doesn't re-toast as "new".
+      try {
+        localStorage.setItem(LS_REPO_NAMES, JSON.stringify(
+          state.repos.map(r => r.full_name).sort()
+        ));
+      } catch {}
+    } else {
+      // Fallback: full refresh.
+      await loadRepos();
+    }
+
+    // Wait briefly for GitHub's edge nodes to propagate the new repo before
+    // we hit /branches, /contents, /commits on it. Without this pause the
+    // freshly-created repo often 404s on related endpoints for a few seconds
+    // and the detail view shows "Load failed".
+    await new Promise(r => setTimeout(r, 1500));
+
+    // Open the new repo and focus the upload zone.
+    await selectRepo(name);
+    // Scroll the drop zone into view after render settles.
+    setTimeout(() => {
+      const dz = document.getElementById("drop");
+      if (dz) {
+        dz.scrollIntoView({ behavior: "smooth", block: "center" });
+        dz.classList.add("hover"); // pulse the border briefly to draw the eye
+        setTimeout(() => dz.classList.remove("hover"), 1200);
+      }
+    }, 150);
+
+  } catch (e) {
+    // GitHub often returns detailed errors for create-repo; surface them.
+    const detail = e.data?.errors?.[0]?.message || e.message;
+    toast("err", `建立失敗：${detail}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "建立";
+  }
+}
+
+// Wire up.
+document.getElementById("newRepoBtn").onclick = openCreateRepoModal;
+document.getElementById("crCancel").onclick = closeCreateRepoModal;
+document.getElementById("crSubmit").onclick = submitCreateRepo;
+document.getElementById("createRepoModal").addEventListener("click", (e) => {
+  if (e.target.id === "createRepoModal") closeCreateRepoModal();
+});
+// Let Enter in the name field submit.
+document.getElementById("crName").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); submitCreateRepo(); }
+});
 
 // ── Utilities ───────────────────────────────────────────────────────────
 function escapeHtml(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
