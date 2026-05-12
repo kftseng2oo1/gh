@@ -1,24 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 380 380" role="img">
-  <title>gh/dash</title>
-  <desc>Multi-repo commander icon — eight amber squares ringed around a diagonal baton, with the numerals 3 and 8 flanking it.</desc>
-
-  <rect x="0" y="0" width="380" height="380" fill="#fafaf7"/>
-
-  <g transform="translate(190 190)">
-    <rect x="-14" y="-116" width="28" height="28" rx="3" fill="#d99a3f" opacity="0.45"/>
-    <rect x="60"  y="-90"  width="28" height="28" rx="3" fill="#d99a3f" opacity="0.6"/>
-    <rect x="95"  y="-14"  width="28" height="28" rx="3" fill="#d99a3f" opacity="0.75"/>
-    <rect x="60"  y="62"   width="28" height="28" rx="3" fill="#d99a3f" opacity="0.6"/>
-    <rect x="-14" y="88"   width="28" height="28" rx="3" fill="#d99a3f" opacity="0.45"/>
-    <rect x="-88" y="62"   width="28" height="28" rx="3" fill="#d99a3f" opacity="0.6"/>
-    <rect x="-123" y="-14" width="28" height="28" rx="3" fill="#d99a3f" opacity="0.75"/>
-    <rect x="-88" y="-90"  width="28" height="28" rx="3" fill="#d99a3f" opacity="0.6"/>
-
-    <line x1="-70" y1="70" x2="70" y2="-70" stroke="#b8701a" stroke-width="10" stroke-linecap="round"/>
-    <circle cx="-70" cy="70" r="12" fill="#b8701a"/>
-    <circle cx="70" cy="-70" r="6" fill="#d99a3f"/>
-
-    <text x="-50" y="-18" font-family="Georgia, 'Times New Roman', serif" font-size="56" font-weight="400" font-style="italic" fill="#2a1d0d" text-anchor="middle">3</text>
-    <text x="50" y="45" font-family="Georgia, 'Times New Roman', serif" font-size="56" font-weight="400" font-style="italic" fill="#2a1d0d" text-anchor="middle">8</text>
-  </g>
-</svg>
+<svg id="svgMain" width="512" height="512" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" id="sStart" stop-color="#595936"></stop>
+            <stop offset="100%" id="sEnd" stop-color="#808000"></stop>
+          </linearGradient>
+          <filter id="fShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.8" flood-color="rgba(0,0,0,0.7)"></feDropShadow>
+          </filter>
+        </defs>
+        <rect id="elRect" x="0.5" y="0.5" width="23" height="23" rx="8.68" ry="8.68" fill="#db8fff" stroke="#ffffff" stroke-width="1.1"></rect>
+        <circle id="elCirc" cx="12" cy="12" r="11.5" fill="#8d8eff" style="display:none"></circle>
+        <path id="elGeo" d="M15.184,19.881L13.177,17.832L12.122,20.499L10.991,17.864L9.044,19.969L8.941,17.103L6.364,18.363L7.304,15.654L4.446,15.898L6.301,13.710L3.548,12.906L6.068,11.536L3.792,9.792L6.636,9.425L5.144,6.976L7.929,7.661L7.422,4.838L9.771,6.483L10.318,3.668L11.914,6.051L13.442,3.623L14.069,6.421L16.370,4.710L15.945,7.546L18.709,6.781L17.288,9.272L20.141,9.557L17.916,11.366L20.474,12.663L17.746,13.546L19.663,15.679L16.799,15.517L17.816,18.199L15.205,17.013Z" fill="url(#g1)"></path>
+        <g id="elSlot"><text x="12" y="12" dy="0.38em" text-anchor="middle" font-weight="900" font-size="5.37" fill="#e8e8f8">CMT</text></g>
+      </svg>
