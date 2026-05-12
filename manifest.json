@@ -1,9 +1,9 @@
 {
-  "name": "github",
-  "short_name": "github",
-  "description": "github",
-  "start_url": "/gh/",
-  "scope": "/gh/",
+  "name": "動畫貼圖制作",
+  "short_name": "動畫貼圖制作",
+  "description": "動畫貼圖制作",
+  "start_url": "/Cmt/",
+  "scope": "/Cmt/",
   "display": "standalone",
   "orientation": "any",
   "theme_color": "#1a73e8",
@@ -14,9 +14,9 @@
   ],
   "shortcuts": [
     {
-      "name": "開啟 github",
-      "short_name": "github",
-      "url": "/gh/",
+      "name": "開啟 動畫貼圖制作",
+      "short_name": "動畫貼圖制作",
+      "url": "/Cmt/",
       "icons": [
         {
           "src": "icon-192.png",
