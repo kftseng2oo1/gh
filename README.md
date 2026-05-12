@@ -1,6 +1,6 @@
-# github
+# 動畫貼圖制作
 
-> github
+> 動畫貼圖制作
 
 ## 📦 包含檔案
 
@@ -18,7 +18,7 @@
 ```bash
 git init
 git add .
-git commit -m "init: github PWA"
+git commit -m "init: 動畫貼圖制作 PWA"
 git branch -M main
 git remote add origin https://github.com/<username>/<repo>.git
 git push -u origin main
@@ -38,7 +38,7 @@ git push -u origin main
 | display | standalone |
 | theme_color | #1a73e8 |
 | lang | zh-TW |
-| scope | /gh/ |
+| scope | /Cmt/ |
 
 ---
 *由 [PWA 打包神器](https://github.com) 自動生成*
