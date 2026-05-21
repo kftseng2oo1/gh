@@ -1,7 +1,8 @@
-<!DOCTYPE html>
-<html lang="zh-Hant"><head><!-- PWA Meta — auto-injected by PWA 打包神器 -->
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>gh/dash — 多專案管理台</title>
 <style>
   /* ───── Design tokens ─────
@@ -702,21 +703,14 @@
     aside.repos { border-right: none; border-bottom: 1px solid var(--line); max-height: 50vh; }
   }
 </style>
-<meta name="application-name" content="github editor"><meta name="description" content="github editor"><meta name="theme-color" content="#1a73e8"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="github editor"><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon.svg"><script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js')
-        .then(r => console.log('[SW] registered:', r.scope))
-        .catch(e => console.warn('[SW] registration failed:', e));
-    });
-  }</script></head>
+</head>
 <body>
 
 <header class="topbar">
   <div class="brand">gh<span class="slash">/</span>dash<span class="sub">multi-repo commander</span></div>
   <div class="config">
     <span class="lbl">worker</span>
-    <input id="workerUrl" placeholder="https://github-manager.xxx.workers.dev">
+    <input id="workerUrl" placeholder="https://github-manager.xxx.workers.dev" />
     <button class="ghost" id="reconfigBtn" title="重新設定 Worker / 金鑰 / Owner">⚙</button>
   </div>
   <div class="ratelimit" id="ratelimit">rate: <b>—</b>/—</div>
@@ -725,7 +719,7 @@
 <main>
   <aside class="repos">
     <div class="search-wrap">
-      <input id="search" placeholder="搜尋 repo… (例：App, tarot, ziwei)" autocomplete="off">
+      <input id="search" placeholder="搜尋 repo… (例：App, tarot, ziwei)" autocomplete="off" />
       <div class="row">
         <span id="repoCount">0 repos</span>
         <div style="display:flex; gap:6px">
@@ -763,15 +757,15 @@
     <p>這些設定會存在本機 <code>localStorage</code>，不會送到 GitHub。Worker URL 指向你部署的 <code>github-manager</code>，金鑰對應 <code>DASH_SECRET</code>（若有設）。</p>
     <label>
       WORKER URL
-      <input id="cfgWorker" placeholder="https://github-manager.xxx.workers.dev">
+      <input id="cfgWorker" placeholder="https://github-manager.xxx.workers.dev" />
     </label>
     <label>
       OWNER (GitHub 帳號)
-      <input id="cfgOwner" placeholder="kftseng2oo1">
+      <input id="cfgOwner" placeholder="kftseng2oo1" />
     </label>
     <label>
       DASH SECRET (選填，對應 Worker 的 X-Dash-Key)
-      <input id="cfgSecret" type="password" placeholder="留空代表 Worker 沒設 DASH_SECRET">
+      <input id="cfgSecret" type="password" placeholder="留空代表 Worker 沒設 DASH_SECRET" />
     </label>
     <div class="probe-status" id="cfgProbe"></div>
     <div class="actions">
@@ -787,7 +781,7 @@
     <div class="viewer-head">
       <div class="path" id="viewerPath">—</div>
       <div class="meta" id="viewerMeta"></div>
-      <a id="viewerDownload" class="ghost" style="padding:4px 10px; border:1px solid var(--line-2); border-radius:2px; color:var(--ink-dim); font-size:11px;" download="">↓ 下載</a>
+      <a id="viewerDownload" class="ghost" style="padding:4px 10px; border:1px solid var(--line-2); border-radius:2px; color:var(--ink-dim); font-size:11px;" download>↓ 下載</a>
       <button class="ghost" id="viewerClose">關閉</button>
     </div>
     <div class="viewer-body" id="viewerBody">
@@ -803,11 +797,11 @@
     <p>你即將永久刪除 <b id="delRepoName" style="color:var(--ink); font-family:var(--f-mono)">—</b>。這個動作<b>無法復原</b>。所有檔案、commit 歷史、分支、issue 會立刻消失。</p>
     <label>
       請輸入 repo 名稱 <span class="req" style="color:var(--rust)">*</span> 以確認
-      <input id="delConfirm" placeholder="輸入 repo 名稱" autocomplete="off" autocapitalize="off">
+      <input id="delConfirm" placeholder="輸入 repo 名稱" autocomplete="off" autocapitalize="off" />
     </label>
     <div class="actions">
       <button class="ghost" id="delCancel">取消</button>
-      <button class="danger-btn" id="delSubmit" disabled="">確認刪除</button>
+      <button class="danger-btn" id="delSubmit" disabled>確認刪除</button>
     </div>
   </div>
 </div>
@@ -821,25 +815,25 @@
     <div class="form-grid">
       <label class="full">
         名稱 <span class="req">*</span>
-        <input id="crName" placeholder="my-new-tool" autocomplete="off">
+        <input id="crName" placeholder="my-new-tool" autocomplete="off" />
         <span class="hint" id="crNameHint">僅允許英數字、連字號、底線、句點</span>
       </label>
 
       <label class="full">
         描述
-        <input id="crDesc" placeholder="一句話說明這個專案做什麼（可選）" autocomplete="off">
+        <input id="crDesc" placeholder="一句話說明這個專案做什麼（可選）" autocomplete="off" />
       </label>
 
       <label class="full">
         網站連結
-        <input id="crHomepage" placeholder="https://kftseng2oo1.github.io/my-new-tool/（可選）" autocomplete="off">
+        <input id="crHomepage" placeholder="https://kftseng2oo1.github.io/my-new-tool/（可選）" autocomplete="off" />
       </label>
 
       <div class="seg full">
         <span class="seg-lbl">可見性</span>
         <div class="seg-opts">
-          <label><input type="radio" name="crVis" value="public" checked=""> 🌐 公開</label>
-          <label><input type="radio" name="crVis" value="private"> 🔒 私有</label>
+          <label><input type="radio" name="crVis" value="public" checked /> 🌐 公開</label>
+          <label><input type="radio" name="crVis" value="private" /> 🔒 私有</label>
         </div>
       </div>
 
@@ -862,7 +856,7 @@
       <div class="seg full">
         <span class="seg-lbl">初始化</span>
         <div class="seg-opts">
-          <label><input type="checkbox" id="crAutoInit"> 建立初始 README.md</label>
+          <label><input type="checkbox" id="crAutoInit" /> 建立初始 README.md</label>
         </div>
         <span class="hint">若要建完立刻拖自己的 index.html 上去，建議「不」勾選 — repo 保持空的比較乾淨</span>
       </div>
@@ -1077,12 +1071,29 @@ async function probeWorker(workerUrl, secret) {
 // ── API ─────────────────────────────────────────────────────────────────
 async function gh(path, opts = {}) {
   if (!state.cfg) throw new Error("未設定");
-  const url = state.cfg.worker + path;
+
+  const method = (opts.method || "GET").toUpperCase();
+
+  // Cache-busting for reads. iOS PWAs aggressively cache GET responses, and
+  // GitHub's CDN also caches /user/repos, so a freshly created/deleted repo
+  // wouldn't show up on refresh — only after fully reopening the app. Append a
+  // unique timestamp to GET URLs and tell fetch never to use its cache.
+  let fullPath = path;
+  if (method === "GET") {
+    const sep = path.includes("?") ? "&" : "?";
+    fullPath = `${path}${sep}_t=${Date.now()}`;
+  }
+
+  const url = state.cfg.worker + fullPath;
   const headers = { ...(opts.headers || {}) };
   if (state.cfg.secret) headers["X-Dash-Key"] = state.cfg.secret;
   if (opts.body && !headers["Content-Type"]) headers["Content-Type"] = "application/json";
 
-  const res = await fetch(url, { ...opts, headers });
+  const res = await fetch(url, {
+    ...opts,
+    headers,
+    cache: "no-store",
+  });
 
   // Surface rate limit.
   const rem = res.headers.get("X-RateLimit-Remaining");
@@ -2479,6 +2490,5 @@ if (!state.cfg) {
   loadRepos();
 }
 </script>
-
-
-</body></html>
+</body>
+</html>
