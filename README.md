@@ -12,6 +12,12 @@
 - 顯示 API 剩餘額度
 - 設定時會做連線診斷，指出 Worker 網址拼錯、密鑰不符、Token 過期等問題
 
+## 📚 Repo 目錄
+側欄的「📚 目錄」把所有 repo 依分類列成目錄，可搜尋、篩選，每張卡片可直接開啟 App。
+- repo 清單即時讀取：新增的 repo 自動列為「未分類」，已刪除的會提示從目錄移除
+- 中文名、分類、說明、依賴、備註存在本 repo 的 `catalog.json`，在目錄裡按「編輯」修改後直接 commit
+- 待 merge 的 PR 即時查詢（需要 Worker 允許 `/search/issues`）
+
 ## 設定
 需要自己部署一個 Cloudflare Worker 當代理（例如 `github-manager.<你的子網域>.workers.dev`），環境變數：
 - `GITHUB_TOKEN`：GitHub Personal Access Token
