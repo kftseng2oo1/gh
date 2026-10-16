@@ -88,6 +88,7 @@
   .ratelimit { color: var(--ink-dim); font-size: 11px; }
   .ratelimit b { color: var(--moss); font-weight: 500; }
   .ratelimit.warn b { color: var(--rust); }
+  .ratelimit.na { color: var(--ink-dimmer); cursor: help; }
 
   /* ── Layout ── */
   main {
@@ -700,6 +701,10 @@
 
   /* ── responsive-ish ── */
   @media (max-width: 900px) {
+    header.topbar { grid-template-columns: minmax(0, 1fr) auto; gap: 10px 12px; padding: 12px 16px; }
+    .brand .sub { display: none; }
+    .config { grid-column: 1 / -1; grid-row: 2; min-width: 0; }
+    .config input { width: auto; flex: 1 1 auto; min-width: 0; }
     main { grid-template-columns: 1fr; height: auto; }
     aside.repos { border-right: none; border-bottom: 1px solid var(--line); max-height: 50vh; }
   }
@@ -1187,7 +1192,7 @@ async function gh(path, opts = {}) {
   // Surface rate limit.
   const rem = res.headers.get("X-RateLimit-Remaining");
   const lim = res.headers.get("X-RateLimit-Limit");
-  if (rem && lim) updateRateLimit(rem, lim);
+  if (rem && lim) { state.rateFromHeaders = true; updateRateLimit(rem, lim); }
 
   const text = await res.text();
   let data = null;
@@ -1203,10 +1208,35 @@ async function gh(path, opts = {}) {
   return data;
 }
 
-function updateRateLimit(rem, lim) {
+function updateRateLimit(rem, lim, resetEpoch) {
   const el = document.getElementById("ratelimit");
   el.innerHTML = `rate: <b>${rem}</b>/${lim}`;
+  el.classList.remove("na");
   el.classList.toggle("warn", Number(rem) < 100);
+  el.title = resetEpoch
+    ? `GitHub API 剩餘 ${rem} 次（每小時 ${lim} 次），${new Date(resetEpoch * 1000).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })} 重置`
+    : `GitHub API 剩餘 ${rem} 次（每小時 ${lim} 次）`;
+}
+
+// 跨網域時瀏覽器會藏起 X-RateLimit-* 標頭（除非 Worker 設定 Access-Control-Expose-Headers），
+// 這時改查 GitHub 的 /rate_limit（不消耗額度）。Worker 也不允許的話就清楚標示「無法取得」。
+let rateFetching = false;
+async function refreshRateLimit() {
+  if (state.rateFromHeaders || rateFetching || !state.cfg) return;
+  rateFetching = true;
+  try {
+    const r = await gh("/rate_limit");
+    const core = (r && r.resources && r.resources.core) || (r && r.rate);
+    if (core && core.limit) updateRateLimit(core.remaining, core.limit, core.reset);
+    else throw new Error("回應格式不對");
+  } catch (e) {
+    const el = document.getElementById("ratelimit");
+    el.innerHTML = "rate: 無法取得";
+    el.classList.remove("warn");
+    el.classList.add("na");
+    el.title = `Worker 沒有提供 API 額度資訊（${e.message}）。在 Worker 的回應加上 Access-Control-Expose-Headers: X-RateLimit-Remaining, X-RateLimit-Limit 就能顯示。`;
+  }
+  rateFetching = false;
 }
 
 // ── Repo list ───────────────────────────────────────────────────────────
@@ -1226,6 +1256,7 @@ async function loadRepos() {
     state.repos = all;
     renderRepoList();
     checkRepoDiff(all);
+    refreshRateLimit();
   } catch (e) {
     list.innerHTML = `<div class="empty">載入失敗：${escapeHtml(e.message)}</div>`;
     toast("err", `載入 repo 失敗：${e.message}`);
@@ -2676,6 +2707,7 @@ async function refreshCatalog(reloadRepos = true) {
     toast("err", `目錄載入失敗：${e.message}`);
   }
   catState.loading = false; renderCatalog();
+  state.rateFromHeaders || refreshRateLimit();
 }
 
 function catRows() {
