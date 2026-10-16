@@ -1,0 +1,519 @@
+{
+ "version": 1,
+ "updated": "2026-10-16",
+ "categories": [
+  "易經占卜",
+  "命理玄學",
+  "修行",
+  "生活家庭",
+  "學習教育",
+  "教學工具",
+  "圖像創作",
+  "開發工具",
+  "投資彩券"
+ ],
+ "repos": {
+  "gold": {
+   "zh": "數位易經 · 完整版",
+   "cat": "易經占卜",
+   "desc": "三數起卦，依事業、感情、股市、訴訟等類別給爻辭與白話解讀",
+   "dep": "純前端"
+  },
+  "ichen3": {
+   "zh": "數位易經（gold 副本）",
+   "cat": "易經占卜",
+   "desc": "與 gold 的 index.html 完全相同",
+   "dep": "純前端",
+   "notes": [
+    {
+     "k": "dup",
+     "t": "與 gold 相同，建議封存"
+    }
+   ]
+  },
+  "v3": {
+   "zh": "數位易經 · 優化版 v3",
+   "cat": "易經占卜",
+   "desc": "三數起卦八大類解讀，含占卜紀錄、分享與使用說明",
+   "dep": "純前端"
+  },
+  "-_-_v2-1": {
+   "zh": "數位易經 · 優化版（v3 副本）",
+   "cat": "易經占卜",
+   "desc": "與 v3 的 index.html 完全相同，附 PWA 安裝指南",
+   "dep": "純前端",
+   "notes": [
+    {
+     "k": "dup",
+     "t": "與 v3 相同，建議封存"
+    }
+   ]
+  },
+  "v2.2": {
+   "zh": "數位易經 · 優化版 v2.2",
+   "cat": "易經占卜",
+   "desc": "三數起卦優化版的較早版本，附 PWA 安裝指南",
+   "dep": "純前端",
+   "notes": [
+    {
+     "k": "dup",
+     "t": "v3 的舊版"
+    }
+   ]
+  },
+  "DE2.3": {
+   "zh": "數位易經 v2.3",
+   "cat": "易經占卜",
+   "desc": "384 條爻辭、八大類別（含婚姻）、本機歷史紀錄",
+   "dep": "純前端"
+  },
+  "digital-ichen": {
+   "zh": "數位易經 · 優化版 v2.1",
+   "cat": "易經占卜",
+   "desc": "三數起卦，爻辭、運勢分數與詳細指引",
+   "dep": "純前端"
+  },
+  "ichen2": {
+   "zh": "數位易經 · 早期版",
+   "cat": "易經占卜",
+   "desc": "三數起卦八大類，解讀只有每類一句通用文字",
+   "dep": "純前端",
+   "notes": [
+    {
+     "k": "dup",
+     "t": "早期版，建議封存"
+    }
+   ]
+  },
+  "gamei": {
+   "zh": "易經六十四卦 · 猜卦名",
+   "cat": "易經占卜",
+   "desc": "看上下卦選卦名的測驗遊戲，附六十四卦表、可調字級",
+   "dep": "純前端"
+  },
+  "HG": {
+   "zh": "六十四卦產生器",
+   "cat": "易經占卜",
+   "desc": "設定六爻產生卦象圖，下載 SVG／PNG 圖示",
+   "dep": "純前端"
+  },
+  "z1": {
+   "zh": "紫微斗數 AI 大師",
+   "cat": "命理玄學",
+   "desc": "完整排盤、三層飛宮分析、專題論命、AI 對話與定盤助手",
+   "dep": "arcar Worker · Claude"
+  },
+  "ZIWEI": {
+   "zh": "紫微斗數 + AI 大師",
+   "cat": "命理玄學",
+   "desc": "另一個獨立的紫微排盤與 AI 解盤 App，含動畫播放",
+   "dep": "arcar Worker · Claude"
+  },
+  "cheman": {
+   "zh": "奇門遁甲 · 行動指引",
+   "cat": "命理玄學",
+   "desc": "自動起奇門盤找吉方，指南針對位，AI 解盤",
+   "dep": "arcar Worker · Claude"
+  },
+  "fs": {
+   "zh": "風水羅盤 · 吉宅鑑定",
+   "cat": "命理玄學",
+   "desc": "依命卦與坐向五行分析住宅，給樓層與房間建議",
+   "dep": "純前端"
+  },
+  "tarot": {
+   "zh": "塔羅秘境 · Arcana v3",
+   "cat": "命理玄學",
+   "desc": "每日一牌、牌陣占卜、AI 深度分析、日誌與牌義辭典",
+   "dep": "arcar Worker · Claude"
+  },
+  "v3taro": {
+   "zh": "AI 易經塔羅",
+   "cat": "命理玄學",
+   "desc": "與 tarot 幾乎相同的另一份",
+   "dep": "arcar Worker · Claude",
+   "notes": [
+    {
+     "k": "dup",
+     "t": "與 tarot 幾乎相同，建議擇一"
+    }
+   ]
+  },
+  "tts-studio": {
+   "zh": "TTS 工作室",
+   "cat": "命理玄學",
+   "desc": "GitHub Actions 用 edge-tts 產生台灣腔旁白，供 z1 流年影片",
+   "dep": "GitHub Actions"
+  },
+  "buddha": {
+   "zh": "阿拉燈 · 佛法心靈導師",
+   "cat": "修行",
+   "desc": "選傳承與語氣的 AI 佛法導師，會記得對話重點",
+   "dep": "twinklehub Worker · Claude"
+  },
+  "dama": {
+   "zh": "法身實相實修",
+   "cat": "修行",
+   "desc": "凝視、圓光、六根帶動引導、實證日誌與 AI 實相導師",
+   "dep": "twinklehub Worker · Claude"
+  },
+  "ginfa": {
+   "zh": "回光百日 · 太乙金華宗旨",
+   "cat": "修行",
+   "desc": "百日築基實修：靜坐引導、心法卡間隔複習、歷程統計",
+   "dep": "純前端"
+  },
+  "indexer": {
+   "zh": "智慧庫建檔工具",
+   "cat": "修行",
+   "desc": "把佛經切段寫入向量資料庫，供佛法導師 RAG 檢索",
+   "dep": "twinklehub Worker · Vectorize"
+  },
+  "feeding": {
+   "zh": "餵奶日記 · 小月亮",
+   "cat": "生活家庭",
+   "desc": "親餵／奶瓶紀錄、倒數提醒、LINE 與 Email 通知家人",
+   "dep": "arcar Worker · LINE"
+  },
+  "house": {
+   "zh": "任務管理中心",
+   "cat": "生活家庭",
+   "desc": "每月固定與臨時家事，到期 LINE／Email 提醒，雲端同步",
+   "dep": "arcar Worker · KV · LINE"
+  },
+  "month-note": {
+   "zh": "任務管理中心（簡版）",
+   "cat": "生活家庭",
+   "desc": "每月家務清單，GitHub Actions 每天用 Telegram 提醒",
+   "dep": "GitHub Actions · Telegram",
+   "notes": [
+    {
+     "k": "warn",
+     "t": "沒有 manifest，無法安裝"
+    },
+    {
+     "k": "dup",
+     "t": "house 的前身"
+    }
+   ]
+  },
+  "medbox": {
+   "zh": "智慧藥管家",
+   "cat": "生活家庭",
+   "desc": "全家用藥打卡、庫存與回診提醒、拍藥袋 AI 辨識",
+   "dep": "arcar Worker · LINE · Email"
+  },
+  "dialy": {
+   "zh": "日課 · 體重與飲食",
+   "cat": "生活家庭",
+   "desc": "記錄體重、飲食照片、BMI 與趨勢圖，資料只在本機",
+   "dep": "純前端"
+  },
+  "hyper-dialy": {
+   "zh": "日課 · 體重與飲食（新版）",
+   "cat": "生活家庭",
+   "desc": "dialy 的新版，附給家人看的安裝手冊頁",
+   "dep": "純前端"
+  },
+  "retire": {
+   "zh": "退休時點試算",
+   "cat": "生活家庭",
+   "desc": "比較 60–65 歲請領勞保年金，加入投資報酬率看累計價值",
+   "dep": "純前端"
+  },
+  "ZUPU": {
+   "zh": "龍山派 曾氏族譜",
+   "cat": "生活家庭",
+   "desc": "祖先名冊、靈骨塔位、族譜樹、祭祀提醒與家族沿革",
+   "dep": "Claude（直連）",
+   "notes": [
+    {
+     "k": "warn",
+     "t": "公開 repo 內含家族資料"
+    }
+   ]
+  },
+  "maginifier": {
+   "zh": "放大鏡",
+   "cat": "生活家庭",
+   "desc": "相機、圖片、文字三種模式放大閱讀",
+   "dep": "純前端"
+  },
+  "compass": {
+   "zh": "拍照羅盤",
+   "cat": "生活家庭",
+   "desc": "拍照印上方位、座標、地址與傾角，可匯出 PDF 報告",
+   "dep": "OpenStreetMap"
+  },
+  "HN": {
+   "zh": "泓音點歌查詢",
+   "cat": "生活家庭",
+   "desc": "KTV 點歌號碼查詢，目前只有弘音系統可線上查",
+   "dep": "honyin Worker"
+  },
+  "hana": {
+   "zh": "沖繩備忘錄",
+   "cat": "生活家庭",
+   "desc": "2026/8 沖繩四天三夜的離線行程、航班、花費與清單",
+   "dep": "純前端"
+  },
+  "flight-deals": {
+   "zh": "飛日韓 · 特價機票",
+   "cat": "生活家庭",
+   "desc": "台灣往返日韓特價機票月曆、比價與 LINE 降價通知",
+   "dep": "自有 Worker · Travelpayouts · LINE"
+  },
+  "zh-ja-talk": {
+   "zh": "對面說",
+   "cat": "生活家庭",
+   "desc": "中文對日語／韓語面對面翻譯，語音輸入、Claude 翻譯、朗讀",
+   "dep": "arcar Worker · Claude"
+  },
+  "twinkle": {
+   "zh": "房價儀表板",
+   "cat": "生活家庭",
+   "desc": "查實價登錄成交資料，列表／地圖檢視，AI 自然語言篩選",
+   "dep": "twinklehub Worker · Gemini"
+  },
+  "animal-sound": {
+   "zh": "世界動物叫聲遊戲",
+   "cat": "學習教育",
+   "desc": "兒童點動物聽叫聲，中英日西四種語言",
+   "dep": "Freesound"
+  },
+  "number": {
+   "zh": "數字小天才",
+   "cat": "學習教育",
+   "desc": "幼兒學 1–10：數字、國字、英文、手勢、加減與記憶遊戲",
+   "dep": "純前端"
+  },
+  "Tonone": {
+   "zh": "動物遊樂園",
+   "cat": "學習教育",
+   "desc": "六款兒童益智遊戲：記憶、數字、形狀顏色、拼圖、節奏、迷宮",
+   "dep": "純前端"
+  },
+  "kana": {
+   "zh": "五十音道場",
+   "cat": "學習教育",
+   "desc": "平片假名關卡、翻卡 SRS、測驗、N5 單字與情境會話",
+   "dep": "純前端"
+  },
+  "jpmap": {
+   "zh": "日本列島地理帖",
+   "cat": "學習教育",
+   "desc": "47 都道府縣互動地圖、人文地理卡與 61 題測驗",
+   "dep": "純前端"
+  },
+  "idiom": {
+   "zh": "成語遊戲場",
+   "cat": "學習教育",
+   "desc": "給長輩玩的成語遊戲，八種玩法 151 題",
+   "dep": "純前端",
+   "notes": [
+    {
+     "k": "warn",
+     "t": "README 網址寫成 idiom-arcade"
+    }
+   ]
+  },
+  "circuit-math": {
+   "zh": "電路數學工具箱",
+   "cat": "學習教育",
+   "desc": "交直流、複數、元件、雙埠網路、波德圖與濾波器計算",
+   "dep": "純前端"
+  },
+  "KVL": {
+   "zh": "迴路求解 KVL/KCL",
+   "cat": "學習教育",
+   "desc": "用 KVL／KCL 求解電路迴路",
+   "dep": "純前端"
+  },
+  "JAPI": {
+   "zh": "木質節拍器",
+   "cat": "學習教育",
+   "desc": "精準節拍器：拍號、點按抓拍、三種音色、練習定時",
+   "dep": "純前端"
+  },
+  "grade-scanner": {
+   "zh": "成績掃描記錄系統",
+   "cat": "教學工具",
+   "desc": "拍考卷 AI 辨識學號與分數，對應名冊並匯出 Excel",
+   "dep": "arcar Worker · Claude",
+   "notes": [
+    {
+     "k": "warn",
+     "t": "沒有 manifest，無法安裝"
+    }
+   ]
+  },
+  "tracker": {
+   "zh": "課堂問答記錄系統",
+   "cat": "教學工具",
+   "desc": "記錄學生課堂問答表現，匯入名冊、匯出 Excel 報表",
+   "dep": "純前端"
+  },
+  "oanda": {
+   "zh": "課堂問答記錄（早期版）",
+   "cat": "教學工具",
+   "desc": "tracker 的早期版本",
+   "dep": "純前端",
+   "notes": [
+    {
+     "k": "dup",
+     "t": "tracker 的舊版，建議封存"
+    }
+   ]
+  },
+  "GMR": {
+   "zh": "早安卡片產生器",
+   "cat": "圖像創作",
+   "desc": "LINE 早安圖：背景、祝福語、AI 清字、有聲動畫影片",
+   "dep": "arcar Worker · Claude · TTS"
+  },
+  "Cmt": {
+   "zh": "LINE 貼圖動畫編輯器",
+   "cat": "圖像創作",
+   "desc": "圖層、關鍵格動畫，匯出可上架的 APNG 動態貼圖",
+   "dep": "純前端"
+  },
+  "cut": {
+   "zh": "LINE 貼圖裁剪器",
+   "cat": "圖像創作",
+   "desc": "整張貼圖表格自動裁成單張、去背、打包 ZIP",
+   "dep": "純前端"
+  },
+  "line-sticker": {
+   "zh": "LINE 貼圖工作室",
+   "cat": "圖像創作",
+   "desc": "AI 生成或上傳圖片，去背加字，整理成貼圖套件",
+   "dep": "arcar Worker · Claude · Stability · remove.bg"
+  },
+  "beauty-cam": {
+   "zh": "美顏相機",
+   "cat": "圖像創作",
+   "desc": "即時美肌濾鏡相機",
+   "dep": "純前端"
+  },
+  "icon": {
+   "zh": "Icon Generator Pro",
+   "cat": "圖像創作",
+   "desc": "用幾何形狀快速做 App 圖示，匯出 SVG",
+   "dep": "純前端"
+  },
+  "icon-ai": {
+   "zh": "Icon 產生器（AI）",
+   "cat": "圖像創作",
+   "desc": "輸入描述由 AI 生成 SVG 圖示，轉 PNG",
+   "dep": "arcar Worker · Claude"
+  },
+  "zenfig": {
+   "zh": "纏繞畫生成器",
+   "cat": "圖像創作",
+   "desc": "點矩陣定義區域，填入各式紋樣（含原住民紋樣），匯出 PNG／SVG",
+   "dep": "純前端"
+  },
+  "moLian": {
+   "zh": "墨聯 AI 對聯",
+   "cat": "圖像創作",
+   "desc": "輸入關鍵字生成合平仄的對聯，排成紅底書法圖",
+   "dep": "Gemini（直連）"
+  },
+  "ai-pmp": {
+   "zh": "Prompt Studio",
+   "cat": "圖像創作",
+   "desc": "上傳人像照片，選場景模組，AI 產生繪圖提示詞",
+   "dep": "arcar Worker · Claude"
+  },
+  "prompt": {
+   "zh": "PromptVault",
+   "cat": "圖像創作",
+   "desc": "AI 繪圖提示語資料庫、模組化組合器與 AI 擴寫",
+   "dep": "Claude（直連）"
+  },
+  "autopack": {
+   "zh": "PWA 打包神器",
+   "cat": "開發工具",
+   "desc": "單檔 HTML 打包成 PWA，一鍵上傳 GitHub",
+   "dep": "GitHub API"
+  },
+  "PWA-PACKER": {
+   "zh": "PWA 打包神器（副本）",
+   "cat": "開發工具",
+   "desc": "autopack 的另一份",
+   "dep": "GitHub API",
+   "notes": [
+    {
+     "k": "dup",
+     "t": "與 autopack 幾乎相同，建議封存"
+    }
+   ]
+  },
+  "gh": {
+   "zh": "gh/dash 多專案管理台",
+   "cat": "開發工具",
+   "desc": "手機管理所有 repo：檔案、commit、上傳、建立、Pages",
+   "dep": "自架 Worker · GitHub API"
+  },
+  "sandbag": {
+   "zh": "HTML 沙盒",
+   "cat": "開發工具",
+   "desc": "貼上 HTML 即時預覽測試",
+   "dep": "純前端"
+  },
+  "copy": {
+   "zh": "剪貼簿存檔器",
+   "cat": "開發工具",
+   "desc": "剪貼簿文字、SVG、圖片快速存成檔案",
+   "dep": "純前端"
+  },
+  "MAPI": {
+   "zh": "萬用 API 申請手冊",
+   "cat": "開發工具",
+   "desc": "常用 API 申請流程、費用、範例程式，本機記錄 Key",
+   "dep": "純前端"
+  },
+  "scrape": {
+   "zh": "網站爬蟲策略分析器",
+   "cat": "開發工具",
+   "desc": "分析網站結構，產生爬蟲策略與 Python／Node 程式",
+   "dep": "arcar Worker · Claude"
+  },
+  "stock": {
+   "zh": "ChainScope 股市探針",
+   "cat": "投資彩券",
+   "desc": "AI 供應鏈台股追蹤：產業地圖、即時行情、AI 解讀",
+   "dep": "twinklehub Worker · Claude"
+  },
+  "lotto": {
+   "zh": "台灣彩券分析系統 v6",
+   "cat": "投資彩券",
+   "desc": "大樂透、威力彩歷史分析與推薦號碼、簽注單",
+   "dep": "純前端",
+   "notes": [
+    {
+     "k": "warn",
+     "t": "安裝名稱顯示 My PWA App"
+    }
+   ]
+  },
+  "wei-lotto": {
+   "zh": "AI 歷史權重分析",
+   "cat": "投資彩券",
+   "desc": "大樂透歷史權重分析與模擬選號",
+   "dep": "純前端",
+   "notes": [
+    {
+     "k": "warn",
+     "t": "沒有 manifest，無法安裝"
+    }
+   ]
+  },
+  "LT33": {
+   "zh": "樂透搖號機 · 真隨機",
+   "cat": "投資彩券",
+   "desc": "單顆、兩顆、三顆一組的真隨機搖號",
+   "dep": "純前端"
+  }
+ }
+}
