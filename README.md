@@ -1,44 +1,24 @@
-# github editor
+# gh/dash · 多專案管理台
 
-> github editor
+在手機上管理所有 GitHub repo：瀏覽檔案、看 commit、上傳檔案、建立或刪除 repo、開啟 Pages。
 
-## 📦 包含檔案
+**線上使用**：https://kftseng2oo1.github.io/gh/
 
-- `icon-192.png`
-- `icon-512.png`
-- `manifest.json`
-- `sw.js`
-- `index.html`
-- `icon.svg`
-- `icon-maskable.svg`
-- `offline.html`
+## 主要功能
+- Repo 列表：排序、搜尋、多選批次操作
+- Repo 詳情：最近 commits、檔案樹、檔案預覽與下載、README 摘要與技術偵測
+- 拖曳上傳檔案並 commit，可一次 commit 到多個 repo
+- 建立新 repo（可套用範本）、刪除 repo、一鍵開啟 GitHub Pages
+- 顯示 API 剩餘額度
+- 設定時會做連線診斷，指出 Worker 網址拼錯、密鑰不符、Token 過期等問題
 
-## 🚀 部署到 GitHub Pages
+## 設定
+需要自己部署一個 Cloudflare Worker 當代理（例如 `github-manager.<你的子網域>.workers.dev`），環境變數：
+- `GITHUB_TOKEN`：GitHub Personal Access Token
+- `DASH_SECRET`：自訂密鑰，App 設定裡填一樣的值
 
-```bash
-git init
-git add .
-git commit -m "init: github editor PWA"
-git branch -M main
-git remote add origin https://github.com/<username>/<repo>.git
-git push -u origin main
-```
+App 內「⚙ 設定」填入 Worker URL（結尾不要斜線）、Owner、密鑰。
 
-然後在 GitHub repo → **Settings → Pages** → Source 選 `main` 分支，等待幾分鐘後即可訪問。
-
-## 📱 安裝 PWA
-
-在支援的瀏覽器（Chrome / Edge / Safari iOS）中打開網頁，  
-點擊「**安裝**」或「**加入主畫面**」即可將此 App 安裝到裝置。
-
-## ⚙ 技術規格
-
-| 項目 | 值 |
-|------|-----|
-| display | standalone |
-| theme_color | #1a73e8 |
-| lang | zh-TW |
-| scope | /gh/ |
-
----
-*由 [PWA 打包神器](https://github.com) 自動生成*
+## 技術與依賴
+- 單檔 HTML PWA（`index.html` 內含全部 HTML/CSS/JS），`manifest.json` + `sw.js` 提供安裝到主畫面與離線快取。
+- 所有 GitHub API 呼叫經過自架 Worker，Token 不放在前端
