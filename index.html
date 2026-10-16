@@ -722,6 +722,7 @@
   .cat-stat b { font-size: 22px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
   .cat-stat.pr b { color: var(--amber-hi); } .cat-stat.new b { color: var(--blue); }
   .cat-stat.dup b { color: var(--ink-dim); } .cat-stat.warn b { color: var(--rust); }
+  .cat-stat:disabled { cursor: default; opacity: .6; }
   .cat-stat[aria-pressed="true"] { border-color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
   .cat-notice { border: 1px dashed var(--line-2); border-radius: 4px; padding: 10px 12px; font-size: 12px; color: var(--ink-dim);
     display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
@@ -781,6 +782,8 @@
     .cat-card .ac { grid-column: 1; grid-row: auto; flex-direction: row; flex-wrap: wrap; }
     .cat-card .ac a, .cat-card .ac button { flex: 1 1 auto; }
     .cat-edit .two { grid-template-columns: 1fr; }
+    .cat-top .sub { flex-basis: 100%; order: 3; }
+    .cat-top .btns { margin-left: auto; }
   }
 </style>
 </head>
@@ -2603,27 +2606,53 @@ async function loadCatalogFile() {
   if (!catState.data.repos) catState.data.repos = {};
 }
 
+// 待 merge 的 PR：先用 search API 一次查全部；Worker 不允許時，改成逐一查每個 repo（8 個並行）
+let prMode = localStorage.getItem("gh-dash-pr-mode") || "search";
 async function loadOpenPRs() {
-  catState.prs = null; catState.prErr = null;
-  try {
-    const all = [];
-    for (let page = 1; page <= 3; page++) {
-      const q = encodeURIComponent(`is:pr is:open user:${state.cfg.owner}`);
-      const r = await gh(`/search/issues?q=${q}&per_page=100&page=${page}`);
-      const items = (r && r.items) || [];
-      all.push(...items);
-      if (items.length < 100) break;
+  catState.prs = null; catState.prErr = null; catState.prProgress = null;
+  const owner = state.cfg.owner;
+  const map = {};
+  const add = (repo, p) => (map[repo] = map[repo] || []).push({ n: p.number, t: p.title || "", url: p.html_url });
+
+  if (prMode === "search") {
+    try {
+      for (let page = 1; page <= 3; page++) {
+        const q = encodeURIComponent(`is:pr is:open user:${owner}`);
+        const r = await gh(`/search/issues?q=${q}&per_page=100&page=${page}`);
+        const items = (r && r.items) || [];
+        items.forEach(it => add(String(it.repository_url || "").split("/").pop(), it));
+        if (items.length < 100) break;
+      }
+      Object.values(map).forEach(a => a.sort((x, y) => x.n - y.n));
+      catState.prs = map;
+      return;
+    } catch (e) {
+      prMode = "per-repo";
+      try { localStorage.setItem("gh-dash-pr-mode", prMode); } catch (_) {}
     }
-    const map = {};
-    all.forEach(it => {
-      const repo = String(it.repository_url || "").split("/").pop();
-      (map[repo] = map[repo] || []).push({ n: it.number, t: it.title || "", url: it.html_url });
-    });
-    Object.values(map).forEach(a => a.sort((x, y) => x.n - y.n));
-    catState.prs = map;
-  } catch (e) {
-    catState.prErr = e.message || "查詢失敗";
   }
+
+  const targets = state.repos.filter(r => !r.archived).map(r => r.name);
+  let done = 0, failed = 0, next = 0;
+  catState.prProgress = `0/${targets.length}`;
+  renderCatalog();
+  const worker = async () => {
+    while (next < targets.length) {
+      const name = targets[next++];
+      try {
+        const list = await gh(`/repos/${owner}/${name}/pulls?state=open&per_page=50`);
+        (Array.isArray(list) ? list : []).forEach(p => add(name, p));
+      } catch (e) { failed++; }
+      done++;
+      if (done % 8 === 0 || done === targets.length) { catState.prProgress = `${done}/${targets.length}`; renderCatalog(); }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(8, targets.length) }, worker));
+  Object.values(map).forEach(a => a.sort((x, y) => x.n - y.n));
+  catState.prProgress = null;
+  if (failed === targets.length && targets.length) { catState.prErr = "Worker 不允許查詢 PR"; return; }
+  catState.prs = map;
+  if (failed) catState.prErr = `${failed} 個 repo 的 PR 沒查到`;
 }
 
 async function openCatalog() {
@@ -2640,9 +2669,9 @@ function closeCatalog() {
 async function refreshCatalog(reloadRepos = true) {
   catState.loading = true; renderCatalog();
   try {
-    const jobs = [loadCatalogFile(), loadOpenPRs()];
-    if (reloadRepos) jobs.push(loadRepos());
-    await Promise.all(jobs);
+    const file = loadCatalogFile();
+    if (reloadRepos || !state.repos.length) await loadRepos();
+    await Promise.all([file, loadOpenPRs()]);
   } catch (e) {
     toast("err", `目錄載入失敗：${e.message}`);
   }
@@ -2680,6 +2709,7 @@ function renderCatalog() {
   const stale = state.repos.length && catState.data ? Object.keys(catState.data.repos).filter(n => !liveNames.has(n)) : [];
 
   const q = catState.q.trim().toLowerCase();
+  if (catState.flag === "pr" && !catState.prs) catState.flag = null;
   const flag = CAT_FLAGS.find(f => f.id === catState.flag);
   const rows = all.filter(x =>
     (catState.cat === "全部" || x.cat === catState.cat) &&
@@ -2688,9 +2718,11 @@ function renderCatalog() {
             ...((x.m && x.m.notes) || []).map(n => n.t), ...x.prs.map(p => p.t)]
           .filter(Boolean).join(" ").toLowerCase().includes(q)));
 
-  const prLine = catState.prErr
-    ? ` · PR 狀態暫時讀不到（${escapeHtml(catState.prErr)}）`
-    : catState.prs ? "" : " · PR 讀取中…";
+  const prLine = catState.prProgress
+    ? ` · 正在查詢 PR（${catState.prProgress}）`
+    : catState.prErr && !catState.prs
+      ? ` · PR 狀態暫時讀不到（${escapeHtml(catState.prErr)}）`
+      : catState.prErr ? ` · ${escapeHtml(catState.prErr)}` : catState.prs ? "" : " · PR 讀取中…";
 
   body.innerHTML = `
     <div class="cat-top">
@@ -2702,7 +2734,7 @@ function renderCatalog() {
       </div>
     </div>
     <div class="cat-stats">${CAT_FLAGS.map(f => `
-      <button class="cat-stat ${f.id}" data-flag="${f.id}" aria-pressed="${catState.flag === f.id}">
+      <button class="cat-stat ${f.id}" data-flag="${f.id}" aria-pressed="${catState.flag === f.id}"${f.id === "pr" && !catState.prs ? " disabled" : ""}>
         <b>${f.id === "pr" && !catState.prs ? "—" : all.filter(f.test).length}</b><span>${f.label}</span></button>`).join("")}
     </div>
     ${stale.length ? `<div class="cat-notice"><span>目錄裡有 <b>${stale.length}</b> 個 repo 已經不存在：${stale.map(escapeHtml).join("、")}</span>
@@ -2718,7 +2750,7 @@ function renderCatalog() {
     <div id="catList">${rows.length ? cats.filter(c => rows.some(x => x.cat === c)).map(c => {
         const g = rows.filter(x => x.cat === c).sort((a, b) => a.r.name.localeCompare(b.r.name));
         return `<section class="cat-group"><h3>${escapeHtml(c)}<small>${g.length}</small></h3>${g.map(catCard).join("")}</section>`;
-      }).join("") : `<div class="cat-empty">沒有符合的 repo</div>`}</div>`;
+      }).join("") : `<div class="cat-empty">沒有符合的 repo<br><button class="ghost" id="catClear" style="margin-top:12px">清除篩選</button></div>`}</div>`;
 
   body.querySelector("#catClose").onclick = closeCatalog;
   body.querySelector("#catRefresh").onclick = () => refreshCatalog(true);
@@ -2733,6 +2765,8 @@ function renderCatalog() {
     renderCatalog();
     const s2 = document.getElementById("catSearch"); s2.focus(); try { s2.setSelectionRange(pos, pos); } catch (e) {}
   };
+  const clr = body.querySelector("#catClear");
+  if (clr) clr.onclick = () => { catState.flag = null; catState.cat = "全部"; catState.q = ""; renderCatalog(); };
   const prune = body.querySelector("#catPrune");
   if (prune) prune.onclick = () => saveCatalogChange(d => { stale.forEach(n => delete d.repos[n]); }, `目錄：移除已刪除的 repo（${stale.join(", ")}）`);
   body.querySelectorAll("[data-act]").forEach(el => el.onclick = () => catAction(el.dataset.act, el.dataset.repo));
