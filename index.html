@@ -703,6 +703,85 @@
     main { grid-template-columns: 1fr; height: auto; }
     aside.repos { border-right: none; border-bottom: 1px solid var(--line); max-height: 50vh; }
   }
+
+  /* ── Repo 目錄（catalog）── 全螢幕覆蓋層，資料：即時 repo 清單 + gh/catalog.json + 開啟中的 PR */
+  .cat-bg {
+    position: fixed; inset: 0; z-index: 90; background: var(--bg);
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(16px, env(safe-area-inset-left, 0px));
+  }
+  .cat-wrap { max-width: 1040px; margin: 0 auto; padding: 18px 0 60px; display: grid; gap: 16px; }
+  .cat-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px; }
+  .cat-top h2 { font-family: var(--f-display); font-style: italic; font-weight: 400; font-size: 30px; margin: 0; }
+  .cat-top h2 .slash { color: var(--amber); font-style: normal; }
+  .cat-top .sub { color: var(--ink-dim); font-size: 12px; flex: 1 1 200px; }
+  .cat-top .btns { display: flex; gap: 8px; }
+  .cat-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+  .cat-stat { background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; text-align: left;
+    color: var(--ink-dim); font: inherit; font-size: 11.5px; cursor: pointer; display: grid; gap: 2px; }
+  .cat-stat b { font-size: 22px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .cat-stat.pr b { color: var(--amber-hi); } .cat-stat.new b { color: var(--blue); }
+  .cat-stat.dup b { color: var(--ink-dim); } .cat-stat.warn b { color: var(--rust); }
+  .cat-stat[aria-pressed="true"] { border-color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
+  .cat-notice { border: 1px dashed var(--line-2); border-radius: 4px; padding: 10px 12px; font-size: 12px; color: var(--ink-dim);
+    display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+  .cat-notice b { color: var(--rust); font-weight: 500; }
+  .cat-ctl { position: sticky; top: calc(-1 * env(safe-area-inset-top, 0px)); z-index: 2; background: var(--bg);
+    padding: 8px 0; border-bottom: 1px solid var(--line); display: grid; gap: 8px; }
+  .cat-ctl input { background: var(--panel-2); border: 1px solid var(--line-2); color: var(--ink); padding: 9px 10px; border-radius: 2px;
+    font-family: var(--f-mono); font-size: 13px; width: 100%; }
+  .cat-ctl input:focus { outline: none; border-color: var(--amber); }
+  .cat-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+  .cat-chips::-webkit-scrollbar { display: none; }
+  .cat-chip { flex: none; background: transparent; border: 1px solid var(--line-2); color: var(--ink-dim); border-radius: 999px;
+    padding: 4px 10px; font: inherit; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  .cat-chip small { color: var(--ink-dimmer); margin-left: 4px; }
+  .cat-chip[aria-pressed="true"] { background: var(--amber); border-color: var(--amber); color: var(--bg); }
+  .cat-chip[aria-pressed="true"] small { color: var(--bg); }
+  .cat-count { font-size: 11px; color: var(--ink-dimmer); }
+  .cat-group { display: grid; gap: 8px; }
+  .cat-group h3 { font-family: var(--f-display); font-weight: 400; font-size: 20px; margin: 10px 0 0; display: flex; gap: 8px; align-items: baseline; }
+  .cat-group h3 small { font-family: var(--f-mono); font-size: 11px; color: var(--ink-dimmer); }
+  .cat-card { background: var(--panel-2); border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 14px; }
+  .cat-card.is-new { border-color: #6b94b860; }
+  .cat-card .hd { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; min-width: 0; }
+  .cat-card .nm { color: var(--amber-hi); font-weight: 500; font-size: 13.5px; text-decoration: none; word-break: break-all; }
+  .cat-card .nm:hover { text-decoration: underline; }
+  .cat-card .zh { font-family: var(--f-sans); font-weight: 600; font-size: 14px; color: var(--ink); }
+  .cat-card .ds { grid-column: 1; margin: 0; font-family: var(--f-sans); font-size: 13.5px; color: var(--ink); line-height: 1.55; min-width: 0; }
+  .cat-card .ds.none { color: var(--ink-dimmer); font-style: italic; }
+  .cat-card .mt { grid-column: 1; display: flex; flex-wrap: wrap; gap: 3px 12px; font-size: 11px; color: var(--ink-dimmer); }
+  .cat-card .tg { grid-column: 1; display: flex; flex-wrap: wrap; gap: 5px; }
+  .ctag { font-size: 11px; padding: 2px 7px; border-radius: 2px; border: 1px solid var(--line-2); color: var(--ink-dim); text-decoration: none; line-height: 1.5; }
+  .ctag.fix  { color: var(--amber-hi); border-color: #d99a3f70; }
+  .ctag.doc  { color: var(--moss); border-color: #8aa35a70; }
+  .ctag.dup  { color: var(--ink-dim); }
+  .ctag.warn { color: var(--rust); border-color: #c76a4f70; }
+  .ctag.new  { color: var(--blue); border-color: #6b94b870; }
+  .ctag.priv { color: var(--rust); }
+  a.ctag:hover { border-color: var(--ink-dim); }
+  .cat-card .ac { grid-column: 2; grid-row: 1 / span 4; display: flex; flex-direction: column; gap: 6px; }
+  .cat-card .ac a, .cat-card .ac button { font: inherit; font-size: 11.5px; text-align: center; padding: 5px 10px; border-radius: 2px;
+    border: 1px solid var(--line-2); color: var(--ink-dim); background: transparent; text-decoration: none; cursor: pointer; white-space: nowrap; }
+  .cat-card .ac a.app { background: var(--amber); border-color: var(--amber); color: var(--bg); }
+  .cat-card .ac a:hover, .cat-card .ac button:hover { border-color: var(--ink-dim); color: var(--ink); }
+  .cat-card .ac a.app:hover { background: var(--amber-hi); color: var(--bg); }
+  .cat-edit { grid-column: 1 / -1; display: grid; gap: 8px; border-top: 1px dashed var(--line-2); padding-top: 10px; margin-top: 4px; }
+  .cat-edit label { display: grid; gap: 3px; font-size: 10.5px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.06em; }
+  .cat-edit input, .cat-edit select, .cat-edit textarea { background: var(--bg); border: 1px solid var(--line-2); color: var(--ink);
+    padding: 7px 9px; border-radius: 2px; font-family: var(--f-sans); font-size: 13.5px; width: 100%; }
+  .cat-edit textarea { resize: vertical; min-height: 60px; }
+  .cat-edit .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .cat-edit .act { display: flex; gap: 8px; justify-content: flex-end; }
+  .cat-bg ~ .toasts, .toasts { z-index: 120; }
+  .cat-empty { padding: 40px 0; text-align: center; color: var(--ink-dimmer); font-style: italic; font-family: var(--f-display); }
+  @media (max-width: 640px) {
+    .cat-card { grid-template-columns: minmax(0, 1fr); }
+    .cat-card .ac { grid-column: 1; grid-row: auto; flex-direction: row; flex-wrap: wrap; }
+    .cat-card .ac a, .cat-card .ac button { flex: 1 1 auto; }
+    .cat-edit .two { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -724,6 +803,7 @@
       <div class="row">
         <span id="repoCount">0 repos</span>
         <div style="display:flex; gap:6px">
+          <button id="catalogBtn" title="所有 repo 的說明目錄">📚 目錄</button>
           <button id="newRepoBtn" title="建立新 repo">＋ 新建</button>
           <button id="refreshRepos">⟳ 重新整理</button>
         </div>
@@ -750,6 +830,11 @@
 </main>
 
 <div class="toasts" id="toasts"></div>
+
+<!-- Repo 目錄 -->
+<div class="cat-bg" id="catalogModal" style="display:none" role="dialog" aria-label="Repo 目錄">
+  <div class="cat-wrap" id="catalogBody"></div>
+</div>
 
 <!-- First-run / reconfigure modal -->
 <div class="modal-bg" id="configModal" style="display:none">
@@ -2483,6 +2568,298 @@ function wireSortAndMulti() {
   };
 }
 wireSortAndMulti();
+
+// ── Repo 目錄 ──────────────────────────────────────────────────────────
+// repo 清單即時取自 Worker（新增／刪除會自動反映）；中文名、分類、說明存在
+// gh repo 的 catalog.json，可在這裡編輯並直接 commit 回 GitHub；開啟中的 PR 即時查詢。
+const CATALOG_REPO = "gh";
+const CATALOG_PATH = "catalog.json";
+const DEFAULT_CATS = ["易經占卜","命理玄學","修行","生活家庭","學習教育","教學工具","圖像創作","開發工具","投資彩券"];
+const UNCAT = "未分類";
+const catState = { data: null, sha: null, prs: null, prErr: null, q: "", cat: "全部", flag: null, editing: null, loading: false, saving: false };
+
+function b64ToUtf8(b64) {
+  const bin = atob(String(b64 || "").replace(/\s/g, ""));
+  return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0)));
+}
+function utf8ToB64(s) {
+  const bytes = new TextEncoder().encode(s);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+async function loadCatalogFile() {
+  try {
+    const f = await gh(`/repos/${state.cfg.owner}/${CATALOG_REPO}/contents/${CATALOG_PATH}`);
+    catState.sha = f.sha;
+    catState.data = JSON.parse(b64ToUtf8(f.content));
+  } catch (e) {
+    if (e.status !== 404) throw e;
+    catState.sha = null;
+    catState.data = { version: 1, categories: [...DEFAULT_CATS], repos: {} };
+  }
+  if (!Array.isArray(catState.data.categories)) catState.data.categories = [...DEFAULT_CATS];
+  if (!catState.data.repos) catState.data.repos = {};
+}
+
+async function loadOpenPRs() {
+  catState.prs = null; catState.prErr = null;
+  try {
+    const all = [];
+    for (let page = 1; page <= 3; page++) {
+      const q = encodeURIComponent(`is:pr is:open user:${state.cfg.owner}`);
+      const r = await gh(`/search/issues?q=${q}&per_page=100&page=${page}`);
+      const items = (r && r.items) || [];
+      all.push(...items);
+      if (items.length < 100) break;
+    }
+    const map = {};
+    all.forEach(it => {
+      const repo = String(it.repository_url || "").split("/").pop();
+      (map[repo] = map[repo] || []).push({ n: it.number, t: it.title || "", url: it.html_url });
+    });
+    Object.values(map).forEach(a => a.sort((x, y) => x.n - y.n));
+    catState.prs = map;
+  } catch (e) {
+    catState.prErr = e.message || "查詢失敗";
+  }
+}
+
+async function openCatalog() {
+  if (!state.cfg) { openConfigModal(true); return; }
+  document.getElementById("catalogModal").style.display = "block";
+  document.body.style.overflow = "hidden";
+  await refreshCatalog(state.repos.length === 0);
+}
+function closeCatalog() {
+  document.getElementById("catalogModal").style.display = "none";
+  document.body.style.overflow = "";
+  catState.editing = null;
+}
+async function refreshCatalog(reloadRepos = true) {
+  catState.loading = true; renderCatalog();
+  try {
+    const jobs = [loadCatalogFile(), loadOpenPRs()];
+    if (reloadRepos) jobs.push(loadRepos());
+    await Promise.all(jobs);
+  } catch (e) {
+    toast("err", `目錄載入失敗：${e.message}`);
+  }
+  catState.loading = false; renderCatalog();
+}
+
+function catRows() {
+  const meta = (catState.data && catState.data.repos) || {};
+  return state.repos.map(r => {
+    const m = meta[r.name] || null;
+    return { r, m, cat: (m && m.cat) || UNCAT, prs: (catState.prs && catState.prs[r.name]) || [] };
+  });
+}
+function prKind(t) { return /readme/i.test(t) ? "doc" : "fix"; }
+const CAT_FLAGS = [
+  { id: "pr",   label: "個 repo 有 PR 待 merge", test: x => x.prs.length > 0 },
+  { id: "new",  label: "個未分類（新 repo）",     test: x => !x.m },
+  { id: "dup",  label: "個重複或舊版",            test: x => x.m && (x.m.notes || []).some(n => n.k === "dup") },
+  { id: "warn", label: "個需要注意",              test: x => x.m && (x.m.notes || []).some(n => n.k === "warn") },
+];
+
+function renderCatalog() {
+  const body = document.getElementById("catalogBody");
+  if (!body) return;
+  if (catState.loading && !catState.data) {
+    body.innerHTML = `<div class="cat-top"><h2>repo<span class="slash">/</span>目錄</h2></div><div class="cat-empty">載入中…</div>`;
+    return;
+  }
+  const all = catRows();
+  const cats = [...(catState.data ? catState.data.categories : DEFAULT_CATS)];
+  if (all.some(x => x.cat === UNCAT)) cats.push(UNCAT);
+  all.forEach(x => { if (!cats.includes(x.cat)) cats.push(x.cat); });
+
+  const liveNames = new Set(state.repos.map(r => r.name));
+  const stale = state.repos.length && catState.data ? Object.keys(catState.data.repos).filter(n => !liveNames.has(n)) : [];
+
+  const q = catState.q.trim().toLowerCase();
+  const flag = CAT_FLAGS.find(f => f.id === catState.flag);
+  const rows = all.filter(x =>
+    (catState.cat === "全部" || x.cat === catState.cat) &&
+    (!flag || flag.test(x)) &&
+    (!q || [x.r.name, x.r.description, x.m && x.m.zh, x.m && x.m.desc, x.m && x.m.dep, x.cat,
+            ...((x.m && x.m.notes) || []).map(n => n.t), ...x.prs.map(p => p.t)]
+          .filter(Boolean).join(" ").toLowerCase().includes(q)));
+
+  const prLine = catState.prErr
+    ? ` · PR 狀態暫時讀不到（${escapeHtml(catState.prErr)}）`
+    : catState.prs ? "" : " · PR 讀取中…";
+
+  body.innerHTML = `
+    <div class="cat-top">
+      <h2>repo<span class="slash">/</span>目錄</h2>
+      <div class="sub">${state.repos.length} 個 repo · 說明存在 ${escapeHtml(CATALOG_REPO)}/${CATALOG_PATH}${catState.data && catState.data.updated ? `（${escapeHtml(catState.data.updated)} 更新）` : ""}${prLine}</div>
+      <div class="btns">
+        <button class="ghost" id="catRefresh"${catState.loading ? " disabled" : ""}>${catState.loading ? "載入中…" : "⟳ 重新整理"}</button>
+        <button class="ghost" id="catClose">✕ 關閉</button>
+      </div>
+    </div>
+    <div class="cat-stats">${CAT_FLAGS.map(f => `
+      <button class="cat-stat ${f.id}" data-flag="${f.id}" aria-pressed="${catState.flag === f.id}">
+        <b>${f.id === "pr" && !catState.prs ? "—" : all.filter(f.test).length}</b><span>${f.label}</span></button>`).join("")}
+    </div>
+    ${stale.length ? `<div class="cat-notice"><span>目錄裡有 <b>${stale.length}</b> 個 repo 已經不存在：${stale.map(escapeHtml).join("、")}</span>
+      <button class="ghost" id="catPrune"${catState.saving ? " disabled" : ""}>從目錄移除</button></div>` : ""}
+    <div class="cat-ctl">
+      <input id="catSearch" type="search" placeholder="搜尋名稱、說明、依賴（例：LINE、Claude、易經）" value="${escapeAttr(catState.q)}" autocomplete="off" />
+      <div class="cat-chips">${["全部", ...cats].map(c => {
+        const n = c === "全部" ? all.length : all.filter(x => x.cat === c).length;
+        return n || c === "全部" ? `<button class="cat-chip" data-cat="${escapeAttr(c)}" aria-pressed="${catState.cat === c}">${escapeHtml(c)}<small>${n}</small></button>` : "";
+      }).join("")}</div>
+      <div class="cat-count">顯示 ${rows.length} / ${all.length}${flag ? `（${flag.label.replace(/^個/, "")}）` : ""}</div>
+    </div>
+    <div id="catList">${rows.length ? cats.filter(c => rows.some(x => x.cat === c)).map(c => {
+        const g = rows.filter(x => x.cat === c).sort((a, b) => a.r.name.localeCompare(b.r.name));
+        return `<section class="cat-group"><h3>${escapeHtml(c)}<small>${g.length}</small></h3>${g.map(catCard).join("")}</section>`;
+      }).join("") : `<div class="cat-empty">沒有符合的 repo</div>`}</div>`;
+
+  body.querySelector("#catClose").onclick = closeCatalog;
+  body.querySelector("#catRefresh").onclick = () => refreshCatalog(true);
+  body.querySelectorAll(".cat-stat").forEach(b => b.onclick = () => {
+    catState.flag = catState.flag === b.dataset.flag ? null : b.dataset.flag; renderCatalog();
+  });
+  body.querySelectorAll(".cat-chip").forEach(b => b.onclick = () => { catState.cat = b.dataset.cat; renderCatalog(); });
+  const s = body.querySelector("#catSearch");
+  s.oninput = () => {
+    catState.q = s.value;
+    const pos = s.selectionStart;
+    renderCatalog();
+    const s2 = document.getElementById("catSearch"); s2.focus(); try { s2.setSelectionRange(pos, pos); } catch (e) {}
+  };
+  const prune = body.querySelector("#catPrune");
+  if (prune) prune.onclick = () => saveCatalogChange(d => { stale.forEach(n => delete d.repos[n]); }, `目錄：移除已刪除的 repo（${stale.join(", ")}）`);
+  body.querySelectorAll("[data-act]").forEach(el => el.onclick = () => catAction(el.dataset.act, el.dataset.repo));
+  wireCatEdit();
+}
+
+function catCard(x) {
+  const r = x.r, m = x.m || {};
+  const owner = state.cfg.owner;
+  const appUrl = r.homepage || (r.has_pages ? `https://${owner.toLowerCase()}.github.io/${r.name}/` : "");
+  const tags = [];
+  if (!x.m) tags.push(`<span class="ctag new">新 repo · 尚未分類</span>`);
+  if (r.private) tags.push(`<span class="ctag priv">● private</span>`);
+  (m.notes || []).forEach(n => tags.push(`<span class="ctag ${n.k === "warn" ? "warn" : "dup"}">${escapeHtml(n.t)}</span>`));
+  x.prs.forEach(p => tags.push(`<a class="ctag ${prKind(p.t)}" href="${escapeAttr(p.url)}" target="_blank" rel="noopener">#${p.n} ${escapeHtml(p.t.length > 22 ? p.t.slice(0, 22) + "…" : p.t)}</a>`));
+  const desc = m.desc || r.description || "";
+  const editing = catState.editing === r.name;
+  return `
+    <article class="cat-card${x.m ? "" : " is-new"}">
+      <div class="hd"><a class="nm" href="${escapeAttr(r.html_url)}" target="_blank" rel="noopener">${escapeHtml(r.name)}</a>${m.zh ? `<span class="zh">${escapeHtml(m.zh)}</span>` : ""}</div>
+      <p class="ds${desc ? "" : " none"}">${desc ? escapeHtml(desc) : "還沒有說明，按「編輯」補上"}</p>
+      <div class="mt">${m.dep ? `<span>依賴 ${escapeHtml(m.dep)}</span>` : ""}<span>推送 ${r.pushed_at ? relTime(r.pushed_at) : "—"}</span>${r.has_pages ? "<span>📄 pages</span>" : ""}</div>
+      ${tags.length ? `<div class="tg">${tags.join("")}</div>` : ""}
+      <div class="ac">
+        ${appUrl ? `<a class="app" href="${escapeAttr(appUrl)}" target="_blank" rel="noopener">開啟 App</a>` : ""}
+        <button data-act="dash" data-repo="${escapeAttr(r.name)}">在 dash 開啟</button>
+        <button data-act="edit" data-repo="${escapeAttr(r.name)}">${editing ? "收合" : "編輯"}</button>
+      </div>
+      ${editing ? catEditForm(r, x.m) : ""}
+    </article>`;
+}
+
+function catEditForm(r, m) {
+  m = m || {};
+  const cats = [...(catState.data ? catState.data.categories : DEFAULT_CATS)];
+  const notes = m.notes || [];
+  const dup = notes.filter(n => n.k === "dup").map(n => n.t).join("；");
+  const warn = notes.filter(n => n.k === "warn").map(n => n.t).join("；");
+  const id = s => `ce-${s}`;
+  return `
+    <div class="cat-edit">
+      <div class="two">
+        <label>中文名稱<input id="${id("zh")}" value="${escapeAttr(m.zh || "")}" placeholder="例：數位易經 · 完整版" /></label>
+        <label>分類<select id="${id("cat")}">
+          ${cats.map(c => `<option${(m.cat || "") === c ? " selected" : ""}>${escapeHtml(c)}</option>`).join("")}
+          <option value="__new"${m.cat ? "" : " selected"}>＋ 新分類…</option>
+        </select></label>
+      </div>
+      <label id="${id("newcatWrap")}"${m.cat ? " hidden" : ""}>新分類名稱<input id="${id("newcat")}" placeholder="例：遊戲" /></label>
+      <label>說明（一兩句，這個 App 在做什麼）<textarea id="${id("desc")}">${escapeHtml(m.desc || r.description || "")}</textarea></label>
+      <label>依賴的服務<input id="${id("dep")}" value="${escapeAttr(m.dep || "")}" placeholder="例：arcar Worker · Claude；純前端" /></label>
+      <div class="two">
+        <label>重複／舊版備註（用「；」分隔）<input id="${id("dup")}" value="${escapeAttr(dup)}" /></label>
+        <label>注意事項（用「；」分隔）<input id="${id("warn")}" value="${escapeAttr(warn)}" /></label>
+      </div>
+      <div class="act">
+        <button class="ghost" data-act="cancel" data-repo="${escapeAttr(r.name)}">取消</button>
+        <button class="primary" data-act="save" data-repo="${escapeAttr(r.name)}"${catState.saving ? " disabled" : ""}>${catState.saving ? "儲存中…" : "儲存並 commit"}</button>
+      </div>
+    </div>`;
+}
+
+function catAction(act, name) {
+  if (act === "dash") { closeCatalog(); selectRepo(name); return; }
+  if (act === "edit") { catState.editing = catState.editing === name ? null : name; renderCatalog(); wireCatEdit(); return; }
+  if (act === "cancel") { catState.editing = null; renderCatalog(); return; }
+  if (act === "save") {
+    const v = s => (document.getElementById(`ce-${s}`)?.value || "").trim();
+    let cat = v("cat");
+    if (cat === "__new") cat = v("newcat");
+    if (!cat) { toast("err", "請選擇分類，或輸入新分類名稱"); return; }
+    const split = s => s.split(/[；;]/).map(t => t.trim()).filter(Boolean);
+    const entry = { zh: v("zh"), cat, desc: v("desc"), dep: v("dep") };
+    const notes = [...split(v("dup")).map(t => ({ k: "dup", t })), ...split(v("warn")).map(t => ({ k: "warn", t }))];
+    if (notes.length) entry.notes = notes;
+    Object.keys(entry).forEach(k => { if (entry[k] === "") delete entry[k]; });
+    entry.cat = cat;
+    saveCatalogChange(d => {
+      d.repos[name] = entry;
+      if (!d.categories.includes(cat)) d.categories.push(cat);
+    }, `目錄：更新 ${name} 的說明`).then(ok => { if (ok) { catState.editing = null; renderCatalog(); } });
+  }
+}
+function wireCatEdit() {
+  const sel = document.getElementById("ce-cat");
+  if (!sel) return;
+  sel.onchange = () => { document.getElementById("ce-newcatWrap").hidden = sel.value !== "__new"; };
+}
+
+// 修改 catalog.json 並 commit。sha 衝突（別台裝置剛改過）時，重新讀取最新版、套用同一個修改再試一次。
+async function saveCatalogChange(mutate, message) {
+  if (catState.saving) return false;
+  catState.saving = true; renderCatalog(); wireCatEdit();
+  const repoObj = state.repos.find(r => r.name === CATALOG_REPO);
+  const branch = (repoObj && repoObj.default_branch) || "main";
+  const put = async () => {
+    const d = JSON.parse(JSON.stringify(catState.data));
+    mutate(d);
+    d.updated = new Date().toLocaleDateString("sv-SE");
+    const res = await gh(`/repos/${state.cfg.owner}/${CATALOG_REPO}/contents/${CATALOG_PATH}`, {
+      method: "PUT",
+      body: JSON.stringify({ message, content: utf8ToB64(JSON.stringify(d, null, 1) + "\n"), sha: catState.sha || undefined, branch }),
+    });
+    catState.data = d;
+    catState.sha = res && res.content && res.content.sha;
+  };
+  let ok = false;
+  try {
+    await put(); ok = true;
+  } catch (e) {
+    if (e.status === 409 || e.status === 422) {
+      try { await loadCatalogFile(); await put(); ok = true; }
+      catch (e2) { toast("err", `儲存失敗：${e2.message}`); }
+    } else {
+      toast("err", `儲存失敗：${e.message}`);
+    }
+  }
+  catState.saving = false;
+  if (ok) toast("ok", "已儲存並 commit 到 GitHub");
+  renderCatalog(); wireCatEdit();
+  return ok;
+}
+
+document.getElementById("catalogBtn").onclick = openCatalog;
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && document.getElementById("catalogModal").style.display !== "none") closeCatalog();
+});
 
 if (!state.cfg) {
   openConfigModal(true);

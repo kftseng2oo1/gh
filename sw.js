@@ -2,7 +2,7 @@
 // Cache key: github-editor-v1
 // Strategy: Stale-While-Revalidate (HTML) + Cache-First (assets)
 
-const CACHE_NAME = 'github-editor-v1';
+const CACHE_NAME = 'github-editor-v2';
 const PRECACHE_URLS = [
     "/gh/index.html",
     "/gh/sw.js",
